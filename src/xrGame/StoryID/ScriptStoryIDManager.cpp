@@ -159,7 +159,7 @@ LPCSTR CScriptStoryIDManager::GetID(ALife::_OBJECT_ID obj_id) const
     //return m_containers_by_id.contains(&cont) ?
     //    (*m_containers_by_id.find(&cont))->m_script_story_id.c_str() : nullptr;
     R_ASSERT(m_containers_by_id.contains(&cont), "Unable to find script story ID from obj ID", std::to_string(obj_id).c_str());
-    return (*m_containers_by_id.find(&cont))->m_script_story_id.c_str();
+    return m_containers_by_id.contains(&cont) ? (*m_containers_by_id.find(&cont))->m_script_story_id.c_str() : nullptr;
 }
 
 void CScriptStoryIDManager::Serialize(ISaveObject& Object)
