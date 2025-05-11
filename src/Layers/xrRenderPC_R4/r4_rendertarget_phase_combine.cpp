@@ -386,6 +386,13 @@ void CRenderTarget::phase_combine()
 		PIX_EVENT(PhaseAberration);
 		PhaseAberration();
 	}
+	
+	//Aight, so here we should enable/disable nvg
+	{
+		PIX_EVENT(phase_nvg);
+		phase_nvg();
+	}
+	
 	{
 		PIX_EVENT(phase_pp);
 		phase_pp();
