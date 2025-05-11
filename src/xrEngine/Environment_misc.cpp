@@ -266,6 +266,10 @@ CEnvDescriptor::CEnvDescriptor	(shared_str const& identifier) :
 	fog_density			= 0.0f;
 	fog_distance		= 400.0f;
 
+	lowland_fog_height   = 0.f;
+	lowland_fog_density  = 0.f;
+	lowland_fog_max_dist = 0.f;
+
 	rain_type			= "default";
 
 	rain_density		= 0.0f;
@@ -331,6 +335,15 @@ void CEnvDescriptor::load	(CEnvironment& environment, CInifile& config)
 	fog_color				= config.r_fvector3	(m_identifier.c_str(),"fog_color");
 	fog_density				= config.r_float	(m_identifier.c_str(),"fog_density");
 	fog_distance			= config.r_float	(m_identifier.c_str(),"fog_distance");
+
+	lowland_fog_height = config.line_exist(m_identifier.c_str(), "lowland_fog_height") ? 
+		config.r_float(m_identifier.c_str(), "lowland_fog_height") : 0.0f;
+
+	lowland_fog_density = config.line_exist(m_identifier.c_str(), "lowland_fog_density") ? 
+		config.r_float(m_identifier.c_str(), "lowland_fog_density") :0.0f;
+
+	lowland_fog_max_dist = config.line_exist(m_identifier.c_str(), "lowland_fog_max_dist") ? 
+		config.r_float(m_identifier.c_str(), "lowland_fog_max_dist") : 0.0f;
 
 	rain_type				= 
 		config.line_exist(m_identifier.c_str(), "rain_type") ? config.r_string(m_identifier.c_str(), "rain_type") : "default";
@@ -568,6 +581,10 @@ void CEnvDescriptorMixer::lerp	(CEnvironment* Env, CEnvDescriptor& A, CEnvDescri
 	fog_near				=	(1.0f - fog_density)*0.85f * fog_distance;
 	fog_far					=	0.99f * fog_distance;
 	
+	lowland_fog_height = rain_fi * A.lowland_fog_height + rain_f * B.lowland_fog_height;
+	lowland_fog_density = rain_fi * A.lowland_fog_density + rain_f * B.lowland_fog_density;
+	lowland_fog_max_dist = rain_fi * A.lowland_fog_max_dist + rain_f * B.lowland_fog_max_dist;
+
 	rain_density = rain_fi * A.rain_density + rain_f * B.rain_density;
 	rain_color.lerp(A.rain_color, B.rain_color, rain_f);
 

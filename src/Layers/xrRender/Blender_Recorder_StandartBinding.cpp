@@ -579,6 +579,26 @@ static class cl_digiclock : public R_constant_setup
 	}
 } binder_digiclock;
 
+static class cl_lowland_fog_params final : public R_constant_setup
+{
+	void setup(R_constant* C) override final
+	{
+		const auto& env = g_pGamePersistent->Environment().CurrentEnv;
+
+		float fog_height = env->lowland_fog_height;
+		float fog_density = env->lowland_fog_density;
+		float fog_max_dist = env->lowland_fog_max_dist;
+
+#ifdef DEBUG
+		fog_height += ps_r4_lowland_fog_height;
+		fog_density += ps_r4_lowland_fog_density;
+		fog_max_dist += ps_r4_lowland_fog_max_dist;
+#endif
+
+		RCache.set_c(C, fog_height, fog_density, fog_max_dist, 0.0f);
+	}
+} binder_lowland_fog_params;
+
 // Standart constant-binding
 void	CBlender_Compile::SetMapping()
 {
@@ -660,6 +680,8 @@ void	CBlender_Compile::SetMapping()
 
 	r_Constant("screen_scale", &binder_screen_scale);
 	
+	r_Constant("lowland_fog_params", &binder_lowland_fog_params);
+
 	// Rain
 	r_Constant				("rain_params",		&binder_rain_params);
 

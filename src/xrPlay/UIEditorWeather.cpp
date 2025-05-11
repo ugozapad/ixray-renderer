@@ -86,6 +86,9 @@ void saveWeather(shared_str name, const xr_vector<CEnvDescriptor*>& env)
 		f.w_float(el->m_identifier.c_str(), "fog_distance", el->fog_distance);
 		f.w_float(el->m_identifier.c_str(), "fog_density", el->fog_density);
 		f.w_fvector3(el->m_identifier.c_str(), "fog_color", el->fog_color);
+		f.w_float(el->m_identifier.c_str(), "lowland_fog_height", el->lowland_fog_height);
+		f.w_float(el->m_identifier.c_str(), "lowland_fog_density", el->lowland_fog_density);
+		f.w_float(el->m_identifier.c_str(), "lowland_fog_max_dist", el->lowland_fog_max_dist);
 		f.w_fvector3(el->m_identifier.c_str(), "rain_color", el->rain_color);
 		f.w_string(el->m_identifier.c_str(), "rain_type", el->rain_type.c_str());
 		f.w_float(el->m_identifier.c_str(), "rain_density", el->rain_density);
@@ -441,6 +444,15 @@ void RenderUIWeather() {
 		changed = true;
 	}
 	if (ImGui::SliderFloat("fog_density", &cur->fog_density, 0.0f, 1.0f)) {
+		changed = true;
+	}
+	if (ImGui::SliderFloat("lowland_fog_height", &cur->lowland_fog_height, -50.0f, 50.0f)) {
+		changed = true;
+	}
+	if (ImGui::SliderFloat("lowland_fog_density", &cur->lowland_fog_density, 0.0f, 70.0f)) {
+		changed = true;
+	}
+	if (ImGui::SliderFloat("lowland_fog_max_dist", &cur->lowland_fog_max_dist, 0.0f, 250.0f)) {
 		changed = true;
 	}
 	if (ImGui::ColorEdit4("fog_color", (float*)&cur->fog_color, ImGuiColorEditFlags_AlphaBar)) {

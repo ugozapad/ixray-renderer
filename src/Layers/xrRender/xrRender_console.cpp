@@ -207,6 +207,10 @@ float		ps_r__test_exp_to_shaders_2	= 1.0f;
 float		ps_r__test_exp_to_shaders_3	= 1.0f;
 float		ps_r__test_exp_to_shaders_4	= 1.0f;
 
+float ps_r4_lowland_fog_height = 0.f;
+float ps_r4_lowland_fog_density = 0.f;
+float ps_r4_lowland_fog_max_dist = 0.f;
+
 BOOL		ps_r2_particle_dt			= FALSE;
 
 int			r_debug_render_depth		= 0;
@@ -685,6 +689,12 @@ void		xrRender_initconsole	()
 	CMD3(CCC_Mask,		"r2_use_nvdbt",			&ps_r2_ls_flags,			R2FLAG_USE_NVDBT);
 	CMD3(CCC_Mask,		"r2_mt",				&ps_r2_ls_flags,			R2FLAG_EXP_MT_CALC);
 #endif // DEBUG
+
+#ifdef DEBUG
+	CMD4(CCC_Float, "r4_lowland_fog_height_debug", &ps_r4_lowland_fog_height, -50.f, 50.f);
+	CMD4(CCC_Float, "r4_lowland_fog_density_debug", &ps_r4_lowland_fog_density, 0.f, 70.f);
+	CMD4(CCC_Float, "r4_lowland_fog_max_dist_debug", &ps_r4_lowland_fog_max_dist, 0.f, 250.f);
+#endif
 
 	CMD3(CCC_Mask,		"r2_sun",				&ps_r2_ls_flags,			R2FLAG_SUN		);
 	CMD3(CCC_Mask,		"r2_sun_details",		&ps_r2_ls_flags,			R2FLAG_SUN_DETAILS);

@@ -146,6 +146,10 @@ public:
 	float				fog_density;
 	float				fog_distance;
 
+	float				lowland_fog_height;
+	float				lowland_fog_density;
+	float				lowland_fog_max_dist;
+
 	float				rain_density;
 	shared_str			rain_type;
 	Fvector3			rain_color;
