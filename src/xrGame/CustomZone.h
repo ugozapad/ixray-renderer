@@ -6,17 +6,38 @@
 
 class CActor;
 class CLAItem;
+class CArtefact;
 class CParticlesObject;
 class CZoneEffector;
 struct SZoneObjectInfo;
 #define SMALL_OBJECT_RADIUS 0.6f
+
+//информация о объекте, находящемся в зоне
+struct SZoneObjectInfo
+{
+	SZoneObjectInfo():object(NULL),zone_ignore(false),dw_time_in_zone(0),f_time_affected(Device.fTimeGlobal),small_object(false),nonalive_object(false) {}
+	CGameObject*			object; 
+	bool					small_object;
+	bool					nonalive_object;
+	//игнорирование объекта в зоне
+	bool					zone_ignore;
+	//присоединенные партиклы
+	xr_vector<CParticlesObject*>	particles_vector;
+	//время прибывания в зоне
+	u32						dw_time_in_zone;
+	float					f_time_affected;
+	bool					death_in_zone;
+
+	bool operator == (const CGameObject* O) const {return object==O;}
+};
+
 
 class CCustomZone :		public CSpaceRestrictor,
 						public Feel::Touch
 {
 private:
     typedef	CSpaceRestrictor inherited;
-
+	
 public:
 	CZoneEffector*		m_actor_effector;
 
@@ -37,9 +58,14 @@ public:
 	virtual		void	Load							(LPCSTR section);
 	virtual		void	net_Destroy						();
 
+				void	OnOwnershipTake					(u16 id);
+				void	ThrowOutArtefact				(CArtefact* pArtefact);
+
 	virtual		void	save							(NET_Packet &output_packet);
 	virtual		void	load							(IReader &input_packet);
-	
+
+	virtual		void	SpawnArtefact					();
+
 	virtual		void	UpdateCL						();
 	virtual		void	UpdateWorkload					(u32 dt);
 	virtual		void	shedule_Update					(u32 dt);
@@ -56,6 +82,9 @@ public:
 
 				float	GetMaxPower						()							{return m_fMaxPower;}
 				void	SetMaxPower						(float p)					{m_fMaxPower = p;}
+
+				void	BornArtefact					(bool forced);
+				void	PrefetchArtefacts				();
 
 	//вычисление силы хита в зависимости от расстояния до центра зоны
 	//относительный размер силы (от 0 до 1)
@@ -99,6 +128,10 @@ protected:
 		eIdleLightR1			=(1<<15),
 		eBoltEntranceParticles	=(1<<16),
 		eUseSecondaryHit		=(1<<17),
+		eSpawnBlowoutArtefacts	= (1 << 18),
+		eBirthOnNonAlive		= (1 << 19),
+		eBirthOnAlive			= (1 << 20),
+		eBirthOnDead			= (1 << 21),
 	};
 	u32					m_owner_id;
 	u32					m_ttl;
@@ -116,6 +149,33 @@ protected:
 	//размер радиуса в процентах от оригинального, 
 	//где действует зона
 	float				m_fEffectiveRadius;
+
+	float				m_fArtefactSpawnProbability;
+	float				m_fArtefactSpawnHeight;
+
+	bool				m_bBornOnBlowoutFlag;
+
+	shared_str			m_sArtefactSpawnParticles;
+	ref_sound			m_ArtefactBornSound;
+
+	float				m_fArtefactSpawnOnDeathProbability;
+	float				m_fThrowOutPower;
+
+	struct ARTEFACT_SPAWN
+	{
+		shared_str	section;
+		float		probability;
+	};
+
+	using ARTEFACT_SPAWN_VECTOR = xr_vector<ARTEFACT_SPAWN>;
+	using ARTEFACT_SPAWN_IT = ARTEFACT_SPAWN_VECTOR::iterator;
+
+	ARTEFACT_SPAWN_VECTOR m_ArtefactSpawn;
+
+	using ARTEFACT_VECTOR = xr_vector<CArtefact*>;
+	using ARTEFACT_VECTOR_IT = ARTEFACT_VECTOR::iterator;
+
+	ARTEFACT_VECTOR m_SpawnedArtefacts;
 
 	//тип наносимого хита
 	ALife::EHitType		m_eHitTypeBlowout;
