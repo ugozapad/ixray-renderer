@@ -545,7 +545,7 @@ void CGameObject::setup_parent_ai_locations(bool assign_position)
 {
 //	CGameObject				*l_tpGameObject	= static_cast<CGameObject*>(H_Root());
 	VERIFY					(H_Parent());
-	CGameObject				*l_tpGameObject	= static_cast<CGameObject*>(H_Parent());
+	CGameObject				*l_tpGameObject	= H_Parent()->cast_game_object();
 	VERIFY					(l_tpGameObject);
 
 	// get parent's position
@@ -620,7 +620,7 @@ void CGameObject::validate_ai_locations			(bool decrement_reference)
 
 void CGameObject::spatial_move	()
 {
-	if (H_Parent())
+	if (H_Parent() && !getVisible() && !getEnabled())
 		setup_parent_ai_locations	();
 	else
 		if (Visual())
@@ -666,11 +666,10 @@ void			CGameObject::dbg_DrawSkeleton	()
 }
 #endif
 
-void CGameObject::renderable_Render	()
+void CGameObject::renderable_Render	(IDSGraphManager* DM)
 {
-	inherited::renderable_Render();
-	::Render->set_Transform		(&XFORM());
-	::Render->add_Visual		(Visual());
+	inherited::renderable_Render(DM);
+	DM->add_Dynamic(Visual(), &XFORM());
 	Visual()->getVisData().hom_frame = Device.dwFrame;
 }
 

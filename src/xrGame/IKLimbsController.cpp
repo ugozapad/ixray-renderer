@@ -250,7 +250,6 @@ void	CIKLimbsController::ShiftObject( const SCalculateData cd[max_size] )
 
 void CIKLimbsController::Calculate( )
 {
-	PROF_EVENT("IK_CALCULATE");
 	update_blend( m_legs_blend );
 
 	Fmatrix &obj = m_object->XFORM( );
@@ -342,13 +341,25 @@ void CIKLimbsController:: IKVisualCallback( IKinematics* K )
 	if( ph_dbg_draw_mask1.test( phDbgIKOff ) )
 		return;
 #endif
-	
-	CGameObject* O=( ( CGameObject* )K->GetUpdateCallbackParam());
-	CPhysicsShellHolder*	Sh = smart_cast<CPhysicsShellHolder*>( O );
-	VERIFY( Sh );
-	CIKLimbsController* ik = Sh->character_ik_controller( );
-	VERIFY( ik );
-	ik->Calculate( );
+
+	if(CGameObject* O = (CGameObject*)K->GetUpdateCallbackParam())
+	{
+		if(CPhysicsShellHolder* Sh = O->cast_physics_shell_holder())
+		{
+			if(CIKLimbsController* ik = Sh->character_ik_controller())
+			{
+				if(!Sh->m_pPhysicsShell)
+				{
+					PROF_EVENT("IK_UPDATE_CALCULATE");
+					ik->_pose_extrapolation.update(O->XFORM());
+					for (CIKLimb& limb : ik->_bone_chains)
+						ik->LimbUpdate(limb);
+
+					ik->Calculate();
+				}
+			}
+		}
+	}
 }
 
 void CIKLimbsController::PlayLegs( CBlend *b )	
@@ -367,7 +378,6 @@ void CIKLimbsController::PlayLegs( CBlend *b )
 }
 void	CIKLimbsController:: Update						( )
 {
-	PROF_EVENT("IK_UPDATE");
 #ifdef DEBUG
 	if( ph_dbg_draw_mask1.test( phDbgIKOff ) )
 		return;
@@ -377,11 +387,6 @@ void	CIKLimbsController:: Update						( )
 
 	skeleton_animated->UpdateTracks();
 	update_blend( m_legs_blend );
-
-	_pose_extrapolation.update( m_object->XFORM() );
-	xr_vector<CIKLimb>::iterator i = _bone_chains.begin(), e = _bone_chains.end();
-	for( ; e != i; ++i )
-			LimbUpdate( *i );
 
 	/*
 	Fmatrix predict;

@@ -333,7 +333,10 @@ bool has_info									(const CALifeSimulator *self_, const ALife::_OBJECT_ID &id
 	if (!known_info)
 		return							(false);
 
-	if (std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(info_id)) == known_info->end())
+	static shared_str has_info;
+	has_info = info_id;
+
+	if (std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(has_info)) == known_info->end())
 		return							(false);
 
 	return								(true);
@@ -357,7 +360,10 @@ void AlifeGiveInfo(const CALifeSimulator *alife, const ALife::_OBJECT_ID &id, LP
 	if (!known_info)
 		return;
 
-	if (std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(info_id)) == known_info->end())
+	static shared_str AlifeGiveInfo;
+	AlifeGiveInfo = info_id;
+
+	if (std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(AlifeGiveInfo)) == known_info->end())
 	{
 		known_info->push_back(info_id);
 	}
@@ -368,9 +374,14 @@ void AlifeGiveInfo(const CALifeSimulator *alife, const ALife::_OBJECT_ID &id, LP
 void AlifeRemoveInfo(const CALifeSimulator *alife, const ALife::_OBJECT_ID &id, LPCSTR info_id)
 {
 	KNOWN_INFO_VECTOR	*known_info = alife->registry(info_portions).object(id, true);
+
 	if (!known_info)
 		return;
-	known_info->erase(std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(info_id)),known_info->end());
+
+	static shared_str AlifeRemoveInfo;
+	AlifeRemoveInfo = info_id;
+
+	known_info->erase(std::find_if(known_info->begin(), known_info->end(), CFindByIDPred(AlifeRemoveInfo)),known_info->end());
 }
 
 void teleport_object(CALifeSimulator* alife, ALife::_OBJECT_ID id, GameGraph::_GRAPH_ID game_vertex_id, u32 level_vertex_id, const Fvector& position)
