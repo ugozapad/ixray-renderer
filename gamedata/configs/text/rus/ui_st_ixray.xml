@@ -380,4 +380,10 @@
 	<string id="eng">
 		<text>English</text>
 	</string>
+	<string id="st_bandage_use">
+		<text>перевязаться</text>
+	</string>
+	<string id="st_bandage_not_used">
+		<text>Перевязка не требуется</text>
+	</string>
 </string_table>

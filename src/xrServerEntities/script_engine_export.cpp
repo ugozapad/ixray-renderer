@@ -28,6 +28,7 @@
 #	include "ai/crow/ai_crow.h"
 #	include "ui/UIActorMenu.h"
 #	include	"ActorCondition.h"
+#	include "bandage.h"
 #endif
 
 void export_classes	(lua_State *L)
@@ -276,6 +277,7 @@ void export_classes	(lua_State *L)
 	CInventoryItem::script_register(L);
 	CInventoryOwner::script_register(L);
 	CMedkit::script_register(L);
+	CBandage::script_register(L);
 	CPhysicsShellHolder::script_register(L);
 	CWeaponAmmo::script_register(L);
 	CGameTaskManager::script_register(L);

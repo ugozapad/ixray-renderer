@@ -15,7 +15,7 @@ enum class EEngineExternalPhysical {
 	None
 };
 
-enum class EEngineExternalGame
+enum class EEngineExternalGame : unsigned char
 {
 	EnableThirst,
 	EnableSleepiness,
@@ -29,7 +29,9 @@ enum class EEngineExternalGame
 	EnableActorStepWallmarks,
 	DisableSprintWhileOverweight,
 	EnableAlternateZoomFovCalc,
-	EnableInventoryPistolSlot
+	EnableInventoryPistolSlot,
+	EnableUseBandage7DaysToDie,
+	Unknown = static_cast<unsigned char>(-1)
 };
 
 enum class EEngineExternalRender 

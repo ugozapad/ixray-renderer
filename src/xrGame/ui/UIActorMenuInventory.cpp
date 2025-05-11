@@ -25,6 +25,7 @@
 #include "../BottleItem.h"
 #include "../WeaponMagazined.h"
 #include "../medkit.h"
+#include "../bandage.h"
 #include "../antirad.h"
 #include "../CustomOutfit.h"
 #include "../ActorHelmet.h"
@@ -39,9 +40,9 @@
 
 #include "../game_sv_single.h"
 #include "ai_object_location.h"
+#include "../ActorCondition.h"
 
-using namespace luabind; //Alundaio
-
+using namespace luabind;
 
 void move_item_from_to(u16 from_id, u16 to_id, u16 what_id);
 
@@ -836,6 +837,16 @@ bool CUIActorMenu::TryUseItem( CUICellItem* cell_itm )
 	CMedkit*		pMedkit			= smart_cast<CMedkit*>		(item);
 	CAntirad*		pAntirad		= smart_cast<CAntirad*>		(item);
 	CEatableItem*	pEatableItem	= smart_cast<CEatableItem*>	(item);
+	CBandage*		pBandage		= smart_cast<CBandage*>		(item);
+
+	const static bool isUseBandage = EngineExternal()[EEngineExternalGame::EnableUseBandage7DaysToDie];
+	if (isUseBandage)
+	{
+		if (pBandage && !pBandage->CanUseItem())
+		{
+			return false;
+		}
+	}
 
 	if ( !(pMedkit || pAntirad || pEatableItem || pBottleItem) )
 	{
@@ -1168,13 +1179,15 @@ void CUIActorMenu::PropertiesBoxForUsing( PIItem item, bool& b_show )
 		m_UIPropertiesBox->AddItem(act_str, nullptr, INVENTORY_EAT_ACTION);
 		b_show = true;
 	}
-	else {
-		CMedkit*		pMedkit			= smart_cast<CMedkit*>		(item);
-		CAntirad*		pAntirad		= smart_cast<CAntirad*>		(item);
-		CEatableItem*	pEatableItem	= smart_cast<CEatableItem*>	(item);
-		CBottleItem*	pBottleItem		= smart_cast<CBottleItem*>	(item);
+	else
+	{
+		auto pMedkit = smart_cast<CMedkit*>(item);
+		auto pAntirad = smart_cast<CAntirad*>(item);
+		auto pEatableItem = smart_cast<CEatableItem*>(item);
+		auto pBottleItem = smart_cast<CBottleItem*>(item);
+		auto pBandage = smart_cast<CBandage*>(item);
 
-		if ( pMedkit || pAntirad )
+		if (pMedkit || pAntirad)
 		{
 			act_str = "st_use";
 		}
@@ -1186,6 +1199,21 @@ void CUIActorMenu::PropertiesBoxForUsing( PIItem item, bool& b_show )
 		{
 			act_str = *pEatableItem->UseText;
 		}
+
+		const static bool isUseBandage = EngineExternal()[EEngineExternalGame::EnableUseBandage7DaysToDie];
+		if (isUseBandage)
+		{
+			if (pBandage)
+			{
+				if (!pBandage->CanUseItem())
+				{
+					return;
+				}
+
+				act_str = "st_bandage_use";
+			}
+		}
+
 		if ( act_str )
 		{
 			m_UIPropertiesBox->AddItem( act_str,  nullptr, INVENTORY_EAT_ACTION );

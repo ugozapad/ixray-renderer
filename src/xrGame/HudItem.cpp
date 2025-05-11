@@ -38,9 +38,7 @@ DLL_Pure *CHudItem::_construct	()
 	return				(m_object);
 }
 
-CHudItem::~CHudItem()
-{
-}
+CHudItem::~CHudItem() = default;
 
 void CHudItem::Load(LPCSTR section)
 {

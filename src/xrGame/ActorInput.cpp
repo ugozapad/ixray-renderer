@@ -34,6 +34,7 @@
 #include "Weapon.h"
 #include "ai/monsters/basemonster/base_monster.h"
 #include "ActorHelmet.h"
+#include "bandage.h"
 
 extern u32 hud_adj_mode;
 
@@ -183,31 +184,39 @@ void CActor::IR_OnKeyboardPress(int cmd)
 				break;
 			}
 			
-			const shared_str& item_name		= g_quick_use_slots[cmd-kQUICK_USE_1];
-			if(item_name.size())
+			const shared_str& itemName		= g_quick_use_slots[cmd-kQUICK_USE_1];
+			if(itemName.size())
 			{
-				PIItem best_itm = nullptr;
+				PIItem bestItm = nullptr;
 
 				for (auto& it : inventory().m_ruck)
 				{
-					if (it->m_section_id == item_name && (best_itm == nullptr || it->GetCondition() < best_itm->GetCondition()))
+					if (it->m_section_id == itemName && (bestItm == nullptr || it->GetCondition() < bestItm->GetCondition()))
 					{
-						best_itm = it;
+						bestItm = it;
 					}
 				}
 
-				if (best_itm != nullptr)
-				{
-					IsGameTypeSingle() ? inventory().Eat(best_itm) : inventory().ClientEat(best_itm);
-					
-					SDrawStaticStruct* _s = CurrentGameUI()->AddCustomStatic("item_used", true);
-					string1024 str = {};
+				PIItem realItemData = inventory().GetAny(itemName.c_str());
+				auto pRealItem = smart_cast<CEatableItemObject*>(realItemData->cast_eatable_item());
 
-					xr_strconcat(str,*g_pStringTable->translate("st_item_used"),": ", best_itm->NameItem());
-					_s->wnd()->TextItemControl()->SetText(str);
-					
-					CurrentGameUI()->ActorMenu().m_pQuickSlot->ReloadReferences(this);
+				if (realItemData)
+				{
+					UseItemsFromFastSlots(realItemData, pRealItem, itemName);
 				}
+
+				//if (best_itm != nullptr)
+				//{
+				//	IsGameTypeSingle() ? inventory().Eat(best_itm) : inventory().ClientEat(best_itm);
+				//
+				//	SDrawStaticStruct* _s = CurrentGameUI()->AddCustomStatic("item_used", true);
+				//	string1024 str = {};
+//
+				//	xr_strconcat(str,*g_pStringTable->translate("st_item_used"),": ", best_itm->NameItem());
+				//	_s->wnd()->TextItemControl()->SetText(str);
+				//
+				//	CurrentGameUI()->ActorMenu().m_pQuickSlot->ReloadReferences(this);
+				//}
 			}
 		}
 		break;
@@ -919,6 +928,42 @@ void CActor::SwitchTorch()
 			torch->Switch();
 		}
 	}
+}
+
+template<typename T>
+void CActor::UseItemsFromFastSlots(const PIItem realItemData, const T* pRealItem, const shared_str& realItemName)
+{
+	static_assert(std::is_same_v<T, CEatableItemObject>, "Second argument must be of type CEatableItemObject*");
+
+	auto l_CreateTextStatic = [&](shared_str itemStringUse) -> void
+	{
+		string1024 realString = "Unknown";
+		SDrawStaticStruct* DrawStaticItemUsed = CurrentGameUI()->AddCustomStatic("item_used", true);
+
+		xr_strconcat(realString, *g_pStringTable->translate(itemStringUse), ": ", realItemData->NameItem());
+
+		CurrentGameUI()->ActorMenu().m_pQuickSlot->ReloadReferences(this);
+		DrawStaticItemUsed->wnd()->TextItemControl()->SetText(realString);
+	};
+
+#ifdef DEBUG
+	Msg("- [%s]: Trying use item -> %s", __FUNCTION__, realItemData->NameItem());
+#endif
+
+	if (IsGameTypeSingle())
+	{
+		inventory().Eat(realItemData);
+	}
+	else
+	{ 
+		inventory().ClientEat(realItemData);
+	}
+
+#ifdef DEBUG
+	Msg("- [%s]: Eaten item -> %s", __FUNCTION__, realItemData->NameItem());
+#endif
+
+	l_CreateTextStatic(pRealItem->GetUseString());
 }
 
 #ifndef MASTER_GOLD

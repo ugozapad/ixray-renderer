@@ -376,4 +376,10 @@
 	<string id="eng">
 		<text>English</text>
 	</string>
+	<string id="st_bandage_use">
+		<text>use bandage</text>
+	</string>
+	<string id="st_bandage_not_used">
+		<text>Bandaging not required</text>
+	</string>
 </string_table>
