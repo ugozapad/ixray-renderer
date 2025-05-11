@@ -48,18 +48,58 @@ CArtefact::CArtefact()
 CArtefact::~CArtefact() 
 {}
 
-void CArtefact::Load(LPCSTR section) 
+float ParseRandomValue(LPCSTR section, LPCSTR param, CInifile* pSettings)
 {
-	inherited::Load			(section);
+	auto set_value = [&](LPCSTR section, LPCSTR param, LPCSTR value) 
+	{
+		auto& section_data = pSettings->r_section(section).Data;
 
+		for (auto& item : section_data) 
+		{
+			if (strcmp(item.first.c_str(), param) == 0) 
+			{
+				item.second = shared_str(value);
+				return;
+			}
+		}
+
+		section_data.push_back({});
+		section_data.back().first = shared_str(param);
+		section_data.back().second = shared_str(value);
+	};
+
+	shared_str value = pSettings->r_string(section, param);
+
+	LPCSTR value_cstr = value.c_str();
+
+	float min = 0.0f, max = 0.0f;
+
+	if (sscanf(value_cstr, "%f,%f", &min, &max) == 2 && min <= max)
+	{
+		float randomFactor = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+		float generatedValue = min + randomFactor * (max - min);
+
+		char buffer[32];
+		sprintf(buffer, "%.6f", generatedValue);
+		set_value(section, param, buffer);
+
+		return generatedValue;
+	}
+
+	return pSettings->r_float(section, param);
+}
+
+void CArtefact::Load(LPCSTR section)
+{
+	inherited::Load(section);
 
 	if (pSettings->line_exist(section, "particles"))
-		m_sParticlesName	= pSettings->r_string(section, "particles");
+		m_sParticlesName = pSettings->r_string(section, "particles");
 
 	if (pSettings->line_exist(section, "particles_bones"))
 	{
 		m_sParticlesBone = nullptr;
-		CParticlesPlayer::LoadParticles(section,"particles_bones",PKinematics(Visual()));
+		CParticlesPlayer::LoadParticles(section, "particles_bones", PKinematics(Visual()));
 	}
 	else
 	{
@@ -67,17 +107,16 @@ void CArtefact::Load(LPCSTR section)
 		{
 			m_sParticlesBone = pSettings->r_string(section, "particles_bone");
 			int count = _GetItemCount(m_sParticlesBone.c_str());
-			if(count>1)
+			if (count > 1)
 			{
-				CParticlesPlayer::LoadParticles(section,"particles_bone",PKinematics(Visual()));
+				CParticlesPlayer::LoadParticles(section, "particles_bone", PKinematics(Visual()));
 				m_sParticlesBone = nullptr;
 			}
 			else
 			{
-				IKinematics* K			= PKinematics(Visual());
-				R_ASSERT2				(K, cNameSect().c_str());
-				u16 bone_id				= K->LL_BoneID(m_sParticlesBone.c_str());
-				
+				IKinematics* K = PKinematics(Visual());
+				R_ASSERT2(K, cNameSect().c_str());
+				u16 bone_id = K->LL_BoneID(m_sParticlesBone.c_str());
 				if (bone_id == BI_NONE)
 				{
 					shared_str message;
@@ -85,29 +124,30 @@ void CArtefact::Load(LPCSTR section)
 					
 					R_ASSERT2(bone_id!=BI_NONE, message.c_str());
 				}
-
 				CParticlesPlayer::AppendBone(bone_id);
 			}
 		}
 	}
 
-	m_bLightsEnabled		= !!pSettings->r_bool(section, "lights_enabled");
-	if(m_bLightsEnabled){
-		sscanf(pSettings->r_string(section,"trail_light_color"), "%f,%f,%f", 
+	m_bLightsEnabled = !!pSettings->r_bool(section, "lights_enabled");
+	if (m_bLightsEnabled) {
+		sscanf(pSettings->r_string(section, "trail_light_color"), "%f,%f,%f",
 			&m_TrailLightColor.r, &m_TrailLightColor.g, &m_TrailLightColor.b);
-		m_fTrailLightRange	= pSettings->r_float(section,"trail_light_range");
+		m_fTrailLightRange = pSettings->r_float(section, "trail_light_range");
 	}
 
+	srand(static_cast<unsigned>(time(nullptr)) + object_id());
 
-	m_fHealthRestoreSpeed    = pSettings->r_float	(section,"health_restore_speed"		);
-	m_fRadiationRestoreSpeed = pSettings->r_float	(section,"radiation_restore_speed"	);
-	m_fSatietyRestoreSpeed   = pSettings->r_float	(section,"satiety_restore_speed"	);
-	m_fPowerRestoreSpeed     = pSettings->r_float	(section,"power_restore_speed"		);
-	m_fBleedingRestoreSpeed  = pSettings->r_float	(section,"bleeding_restore_speed"	);
-	
-	if(pSettings->section_exist(pSettings->r_string(section,"hit_absorbation_sect")))
+	m_fHealthRestoreSpeed = ParseRandomValue(section, "health_restore_speed", pSettings);
+	m_fRadiationRestoreSpeed = ParseRandomValue(section, "radiation_restore_speed", pSettings);
+	m_fSatietyRestoreSpeed = ParseRandomValue(section, "satiety_restore_speed", pSettings);
+	m_fPowerRestoreSpeed = ParseRandomValue(section, "power_restore_speed", pSettings);
+	m_fBleedingRestoreSpeed = ParseRandomValue(section, "bleeding_restore_speed", pSettings);
+	m_additional_weight = ParseRandomValue(section, "additional_inventory_weight", pSettings);
+
+	if (pSettings->section_exist(pSettings->r_string(section, "hit_absorbation_sect")))
 	{
-		m_ArtefactHitImmunities.LoadImmunities(pSettings->r_string(section,"hit_absorbation_sect"),pSettings);
+		m_ArtefactHitImmunities.LoadImmunities(pSettings->r_string(section, "hit_absorbation_sect"), pSettings);
 	}
 	m_bCanSpawnZone			= !!pSettings->line_exist("artefact_spawn_zones", section);
 	m_af_rank				= pSettings->r_u8(section, "af_rank");
