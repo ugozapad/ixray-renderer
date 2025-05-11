@@ -7,6 +7,7 @@
 #include "metalic_roughness_light.hlsli"
 #include "metalic_roughness_ambient.hlsli"
 #include "reflections.hlsli"
+#include "fog.hlsli"
 
 Texture2D<float> s_occ;
 
@@ -21,6 +22,7 @@ float4 main(_input I) : SV_Target
 {
     IXrayGbuffer O;
     GbufferUnpack(I.tc0.xy, I.pos2d.xy, O);
+
     float3 Light = s_accumulator.Load(int3(I.pos2d.xy, 0)).xyz;
 
 #ifdef USE_R2_STATIC_SUN
@@ -42,7 +44,13 @@ float4 main(_input I) : SV_Target
     float3 Ambient = AmbientLighting(O.View, O.Normal, O.Color, O.Metalness, O.Roughness, O.Hemi, O.F0);
 #endif
 
+    float4 linear_fog = get_linear_fog(O.ViewDist);
+	float4 height_fog = get_height_fog(O.ViewDist);
+
     float3 Color = Occ * Ambient + Light;
+
+    Color = lerp(Color, height_fog.xyz, height_fog.w);	
+	Color = lerp(Color, linear_fog.xyz, linear_fog.w);
 
     float Fog = PushGamma(saturate(O.ViewDist * fog_params.w + fog_params.x));
     Color = lerp(Color, PushGamma(fog_color.xyz), Fog);
