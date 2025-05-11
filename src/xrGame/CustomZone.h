@@ -12,26 +12,6 @@ class CZoneEffector;
 struct SZoneObjectInfo;
 #define SMALL_OBJECT_RADIUS 0.6f
 
-//информация о объекте, находящемся в зоне
-struct SZoneObjectInfo
-{
-	SZoneObjectInfo():object(NULL),zone_ignore(false),dw_time_in_zone(0),f_time_affected(Device.fTimeGlobal),small_object(false),nonalive_object(false) {}
-	CGameObject*			object; 
-	bool					small_object;
-	bool					nonalive_object;
-	//игнорирование объекта в зоне
-	bool					zone_ignore;
-	//присоединенные партиклы
-	xr_vector<CParticlesObject*>	particles_vector;
-	//время прибывания в зоне
-	u32						dw_time_in_zone;
-	float					f_time_affected;
-	bool					death_in_zone;
-
-	bool operator == (const CGameObject* O) const {return object==O;}
-};
-
-
 class CCustomZone :		public CSpaceRestrictor,
 						public Feel::Touch
 {
@@ -390,6 +370,7 @@ struct SZoneObjectInfo
 	//время прибывания в зоне
 	u32						dw_time_in_zone;
 	float					f_time_affected;
+	bool					death_in_zone;
 
 	static xr_vector<SZoneObjectInfo>::iterator find(CCustomZone* zone, CGameObject* GO)
 	{

@@ -1301,9 +1301,7 @@ void CCustomZone::BornArtefact(bool forced)
 		if (::Random.randF(0.f, 1.f) > m_fArtefactSpawnProbability)
 			return;
 
-		OBJECT_INFO_VEC_IT it;
-
-		for (it = m_ObjectInfoMap.begin(); m_ObjectInfoMap.end() != it; ++it)
+		for (auto it = m_ObjectInfoMap.begin(); m_ObjectInfoMap.end() != it; ++it)
 		{
 			SZoneObjectInfo& info = (*it);
 			if (!info.zone_ignore && !info.object->getDestroy())
@@ -1355,9 +1353,7 @@ void CCustomZone::ThrowOutArtefact(CArtefact* pArtefact)
 
 	if (*m_sArtefactSpawnParticles)
 	{
-		using namespace Particles::Details;
-		CParticlesObject* pParticles;
-		pParticles = CParticlesObject::Create(*m_sArtefactSpawnParticles, TRUE);
+		auto pParticles = Particles::Details::Create(*m_sArtefactSpawnParticles, TRUE);
 
 		pParticles->UpdateParent(pArtefact->XFORM(), zero_vel);
 		pParticles->Play(true);
