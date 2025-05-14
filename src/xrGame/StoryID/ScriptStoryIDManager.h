@@ -12,8 +12,6 @@ class CScriptStoryIDManager
         bool operator==(const SContainer&) const = default;
     };
 
-    friend ISaveObject& operator<<(ISaveObject& obj, SContainer& cont);
-
     struct SContainerObjIDPred
     {
         size_t operator()(SContainer* s) const
@@ -47,12 +45,10 @@ public:
     void Unregister(LPCSTR script_story_id);
     ALife::_OBJECT_ID GetID(LPCSTR script_story_id) const;
     LPCSTR GetID(ALife::_OBJECT_ID obj_id) const;
-    void Serialize(ISaveObject& Object);
     
     static CScriptStoryIDManager& GetInstance();
     static void VerifiedRegisterObject(CSE_Abstract* se_obj);
     static void script_register(lua_State *L);
 };
 
-ISaveObject& operator<<(ISaveObject& obj, CScriptStoryIDManager::SContainer& cont);
 

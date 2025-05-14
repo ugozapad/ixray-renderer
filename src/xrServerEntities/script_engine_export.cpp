@@ -13,7 +13,6 @@
 
 #include "alife_human_brain.h"
 #include "alife_monster_brain.h"
-#include "script_xr_logic.h"
 
 #ifdef XRSE_FACTORY_EXPORTS
 
@@ -29,6 +28,7 @@
 #	include "ai/crow/ai_crow.h"
 #	include "ui/UIActorMenu.h"
 #	include	"ActorCondition.h"
+#	include "script_xr_logic.h"
 #endif
 
 void export_classes	(lua_State *L)

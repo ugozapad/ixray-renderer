@@ -1,3 +1,4 @@
+#include "StdAfx.h"
 #include "ScriptStoryIDManager.h"
 
 #include "alife_object_registry.h"
@@ -66,6 +67,7 @@ namespace ScriptStoryIDManager
 
 void CScriptStoryIDManager::script_register(lua_State* L)
 {
+    using namespace luabind;
     
     module(L, "story_objects")[
         class_<CScriptStoryIDManager>("CScriptStoryIDManager")
@@ -77,15 +79,6 @@ void CScriptStoryIDManager::script_register(lua_State* L)
             def("get_story_objects_registry", &CScriptStoryIDManager::GetInstance),
             def("check_spawn_ini_for_story_id", &CScriptStoryIDManager::VerifiedRegisterObject)
             ];
-}
-
-ISaveObject& operator<<(ISaveObject& obj, CScriptStoryIDManager::SContainer& cont)
-{
-    BEGIN_CHUNK(obj, "CScriptStoryIDManager::SContainer")
-    {
-        obj << cont.m_obj_id << cont.m_script_story_id;
-    }
-    return obj;
 }
 
 void CScriptStoryIDManager::Register(ALife::_OBJECT_ID obj_id, shared_str script_story_id)
@@ -160,12 +153,4 @@ LPCSTR CScriptStoryIDManager::GetID(ALife::_OBJECT_ID obj_id) const
     //    (*m_containers_by_id.find(&cont))->m_script_story_id.c_str() : nullptr;
     R_ASSERT(m_containers_by_id.contains(&cont), "Unable to find script story ID from obj ID", std::to_string(obj_id).c_str());
     return m_containers_by_id.contains(&cont) ? (*m_containers_by_id.find(&cont))->m_script_story_id.c_str() : nullptr;
-}
-
-void CScriptStoryIDManager::Serialize(ISaveObject& Object)
-{
-    BEGIN_CHUNK(Object, "CScriptStoryIDManager")
-    {
-        Object << m_containers_by_id;
-    }
 }
