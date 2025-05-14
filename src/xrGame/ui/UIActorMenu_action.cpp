@@ -169,6 +169,9 @@ bool CUIActorMenu::OnItemDbClick(CUICellItem* itm)
 	{
 	case iActorSlot:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			if ( m_currMenuMode == mmDeadBodySearch )
 				ToDeadBodyBag	( itm, false );
 			else
@@ -176,8 +179,87 @@ bool CUIActorMenu::OnItemDbClick(CUICellItem* itm)
 			break;
 		}
 	case iStackList:
+		{
+			VERIFY(itm->m_represent_parent_list != EDDListType::iInvalid);
+			CUICellItem* real_itm = itm->m_represent_parent;
+			VERIFY(real_itm);
+			/*m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);*/
+			m_pInventoryStackList->ClearAll(true);
+			
+			if ( m_currMenuMode == mmTrade )
+			{
+				switch (itm->m_represent_parent_list)
+				{
+					case EDDListType::iActorBag:{
+						ToActorTrade( real_itm, false );
+						break;
+					}
+					case EDDListType::iPartnerTradeBag:{
+						ToPartnerTrade( real_itm, false );
+						break;
+					}
+					case EDDListType::iActorTrade:{
+						ToBag( real_itm, false );
+						break;
+					}
+					case EDDListType::iPartnerTrade:{
+						ToPartnerTradeBag( real_itm, false );
+						break;
+					}
+					default:{VERIFY(false);}
+				}
+				ActivateStackList(itm->m_represent_top_parent);
+				break;
+			}
+			
+			if ( m_currMenuMode == mmDeadBodySearch )
+			{
+				switch (itm->m_represent_parent_list)
+				{
+					case EDDListType::iActorBag:{
+						ToDeadBodyBag( real_itm, false );
+						break;
+					}
+					case EDDListType::iDeadBodyBag:{
+						ToBag( real_itm, false );
+						break;
+					}
+					default:{VERIFY(false);}
+				}
+				ActivateStackList(itm->m_represent_top_parent);
+				break;
+			}
+			
+			if(m_currMenuMode!=mmUpgrade && TryUseItem( real_itm  ))
+			{
+				ActivateStackList(itm->m_represent_top_parent);
+				break;
+			}
+			
+			if ( TryActiveSlot( real_itm  ) )
+			{
+				ActivateStackList(itm->m_represent_top_parent);
+				break;
+			}
+			
+			PIItem iitem_to_place = (PIItem)real_itm ->m_pData;
+			if ( !ToSlot( real_itm , false, iitem_to_place->BaseSlot() ) )
+			{
+				if ( !ToBelt( real_itm , false ) )
+				{
+					ToSlot( real_itm , true, iitem_to_place->BaseSlot() );
+				}
+			}
+			ActivateStackList(itm->m_represent_top_parent);
+			break;
+		}
 	case iActorBag:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			if ( m_currMenuMode == mmTrade )
 			{
 				ToActorTrade( itm, false );
@@ -188,20 +270,20 @@ bool CUIActorMenu::OnItemDbClick(CUICellItem* itm)
 					ToDeadBodyBag( itm, false );
 					break;
 				}
-				if(m_currMenuMode!=mmUpgrade && TryUseItem( itm ))
+				if(m_currMenuMode!=mmUpgrade && TryUseItem( itm  ))
 				{
 					break;
 				}
-				if ( TryActiveSlot( itm ) )
+				if ( TryActiveSlot( itm  ) )
 				{
 					break;
 				}
-				PIItem iitem_to_place = (PIItem)itm->m_pData;
-				if ( !ToSlot( itm, false, iitem_to_place->BaseSlot() ) )
+				PIItem iitem_to_place = (PIItem)itm ->m_pData;
+				if ( !ToSlot( itm , false, iitem_to_place->BaseSlot() ) )
 				{
-					if ( !ToBelt( itm, false ) )
+					if ( !ToBelt( itm , false ) )
 					{
-						ToSlot( itm, true, iitem_to_place->BaseSlot() );
+						ToSlot( itm , true, iitem_to_place->BaseSlot() );
 					}
 				}
 				break;
@@ -213,21 +295,33 @@ bool CUIActorMenu::OnItemDbClick(CUICellItem* itm)
 		}
 	case iActorTrade:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			ToBag( itm, false );
 			break;
 		}
 	case iPartnerTradeBag:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			ToPartnerTrade( itm, false );
 			break;
 		}
 	case iPartnerTrade:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			ToPartnerTradeBag( itm, false );
 			break;
 		}
 	case iDeadBodyBag:
 		{
+			m_ActorStateInfo->Show(true);
+			m_pInventoryStackList->ClearAll(true);
+			m_pInventoryStackList->Show(false);
 			ToBag( itm, false );
 			break;
 		}
@@ -270,11 +364,17 @@ void CUIActorMenu::ActivateStackList(CUICellItem* cell_item)
 	m_pInventoryStackList->Show(true);
 	
 	CUICellItem* itm = create_cell_item( (CInventoryItem*)(cell_item->m_pData) );
+	itm->m_represent_parent_list = GetListType(cell_item->OwnerList());
+	itm->m_represent_top_parent	= cell_item;
+	itm->m_represent_parent = cell_item;
 	m_pInventoryStackList->SetItem(itm);
 
 	for(u32 i = 0; i < cell_item->ChildsCount(); ++i)
 	{
 		itm = create_cell_item( (CInventoryItem*)(cell_item->Child(i)->m_pData) );
+		itm->m_represent_parent_list = GetListType(cell_item->OwnerList());
+		itm->m_represent_top_parent	= cell_item;
+		itm->m_represent_parent = cell_item->Child(i);
 		m_pInventoryStackList->SetItem(itm);
 	}
 }
