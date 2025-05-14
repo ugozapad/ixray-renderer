@@ -175,6 +175,7 @@ bool CUIActorMenu::OnItemDbClick(CUICellItem* itm)
 				ToBag			( itm, false );
 			break;
 		}
+	case iStackList:
 	case iActorBag:
 		{
 			if ( m_currMenuMode == mmTrade )
