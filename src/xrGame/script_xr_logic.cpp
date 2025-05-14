@@ -114,7 +114,7 @@ bool CScriptXRParser::isSymbolEvent(char nSymbol) const
 	return result;
 }
 
-const char* CScriptXRParser::lua_pickSectionFromCondlist(luabind::object pClientPlayer, luabind::object pServerObject, const char* pSectionName, const char* pFieldName, const char* pSourceName)
+const char* CScriptXRParser::lua_pickSectionFromCondlist(luabind::object pClientPlayer, luabind::object pServerObject, const char* pSourceName)
 {
 	bool was_found_check = false;
 	bool was_found_set = false;

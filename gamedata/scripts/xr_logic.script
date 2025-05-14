@@ -565,116 +565,16 @@ end
 
 
 function pick_section_from_condlist(actor, npc, condlist)
-	local rval = nil -- math.random(100)
-	--printf("_bp: pick_section_from_condlist: rval = %d", rval)
+	if get_xr_parser_manager() then 
+        local result = get_xr_parser_manager():pick_section_from_condlist(
+            actor,
+            npc,
+            tostring(condlist)
+        )
+        return result
+    end
 
-	local newsect = nil
-	local infop_conditions_met
-	for n, cond in pairs(condlist) do
-		infop_conditions_met = true -- изначально считаем, что все условия переключения удовлетворены
-		for inum, infop in pairs(cond.infop_check) do
-			if infop.prob then
-				if not rval then
-					rval = math.random(100)
-				end
-				if infop.prob < rval then
-					infop_conditions_met = false -- инфопоршен есть, но он не должен присутствовать
-					break
-				end
-			elseif infop.func then
-				--printf("_bp: infop.func = %s", infop.func)
-				if not xr_conditions[infop.func] then
-					if type(npc.name) == "function" then
-						abort("object '%s': pick_section_from_condlist: function '%s' is " ..
-							"not defined in xr_conditions.script", npc:name(), infop.func)
-					else
-						abort("object '%s': pick_section_from_condlist: function '%s' is " ..
-							"not defined in xr_conditions.script", tostring(npc.name), infop.func)
-					end
-				end
-				--if xr_conditions[infop.func](actor, npc) then
-				if infop.params then
-					if xr_conditions[infop.func](actor, npc, infop.params) then
-						if not infop.expected then
-							infop_conditions_met = false -- инфопоршен есть, но не должен присутствовать
-							break
-						end
-					else
-						if infop.expected then
-							infop_conditions_met = false -- инфопоршен есть, но не должен присутствовать
-							break
-						end
-					end
-				else
-					if xr_conditions[infop.func](actor, npc) then
-						if not infop.expected then
-							infop_conditions_met = false -- инфопоршен есть, но не должен присутствовать
-							break
-						end
-					else
-						if infop.expected then
-							infop_conditions_met = false -- инфопоршен есть, но не должен присутствовать
-							break
-						end
-					end
-				end
-			elseif has_alife_info(infop.name) then
-				if not infop.required then
-					--'printf("FAILED: actor has infop '%s', which is NOT needed [%s]", infop.name, tostring(has_alife_info(infop.name)))
-					infop_conditions_met = false -- инфопоршен есть, но он не должен присутствовать
-					break
-				else
-					--'printf("PASSED: actor has infop '%s', which is needed [%s]", infop.name, tostring(has_alife_info(infop.name)))
-				end
-			else
-				if infop.required then
-					--'printf("FAILED: actor has NO infop '%s', which is needed [%s]", infop.name, tostring(has_alife_info(infop.name)))
-					infop_conditions_met = false -- инфопоршена нет, но он нужен
-					break
-				else
-					--'printf("PASSED: actor has NO infop '%s', which is not needed [%s]", infop.name, tostring(has_alife_info(infop.name)))
-				end
-			end
-		end
-		--printf("_bp: infop_cond_met = %s", utils.to_str(infop_conditions_met))
-		if infop_conditions_met then
-			-- Условия выполнены. Независимо от того, задана ли секция, нужно проставить требуемые
-			-- infoportions:
-			for inum, infop in pairs(cond.infop_set) do
-				if db.actor == nil then
-					abort("TRYING TO SET INFOS THEN ACTOR IS NIL")
-				end
-				if infop.func then
-					if not xr_effects[infop.func] then
-						abort("object '%s': pick_section_from_condlist: function '%s' is " ..
-							"not defined in xr_effects.script", if_then_else(npc, npc:name(), "nil"), infop.func)
-					end
-					if infop.params then
-						xr_effects[infop.func](actor, npc, infop.params)
-					else
-						xr_effects[infop.func](actor, npc)
-					end
-				elseif infop.required then
-					if not has_alife_info(infop.name) then
-						actor:give_info_portion(infop.name)
-					end
-				else
-					if has_alife_info(infop.name) then
-						--printf("*INFO [disabled]*: npc='%s' id='%s'", actor:name(),infop.name)
-						disable_info(infop.name)
-					end
-				end
-			end
-			if cond.section == "never" then
-				return nil
-			else
-				return cond.section
-			end
-		end
-	end
-
-	--printf("_bp: pick_section_from_condlist: nil")
-	return nil
+    return nil
 end
 
 -- Выполняет переключение на указанную секцию, если задана.
@@ -928,7 +828,9 @@ end
 --   2 = { infop_check = { 1 = {"infop3" = true}, 2 = {"infop4" = false} }, infop_set = {}, section = "section2" },
 -- }
 function parse_condlist(npc, section, field, src)
-	local lst = {}
+	return src
+end
+--[[	local lst = {}
 
 	-- 1) Разбиваем на разделенные запятыми части:
 	local at, to, infop_check_lst, remainings, infop_set_lst, newsect
@@ -978,17 +880,48 @@ function parse_condlist(npc, section, field, src)
 		-- заполнить массив infop_check: { "infop_name" = true/false }.
 		-- На входе имеем строку вида "  +infop1  -infop2 +infop3 ... "
 		lst[n].infop_check = {}
+
 		parse_infop(lst[n].infop_check, infop_check_lst)
 
 		-- То же самое для устанавливаемых infoportions:
 		lst[n].infop_set = {}
+
 		parse_infop(lst[n].infop_set, infop_set_lst)
 
 		n = n + 1
 	end
 
+	local size_set = 0
+	local size_check = 0
+
+	for k,v in pairs(lst) do
+		if #lst[k].infop_check > size_check then
+			size_check = #lst[k].infop_check
+		end
+
+		if #lst[k].infop_set > size_set then
+			size_set = #lst[k].infop_set
+		end
+	end
+
+	if #lst > 16 then
+		callstack()
+		printf("xr_logic:parse too big condlist size=%d", #lst)
+	end
+
+	if size_set > 16 then
+		callstack()
+		printf("xr_logic:parse too big set size=%d", size_set)
+	end
+
+	if size_check > 16 then
+		callstack()
+		printf("xr_logic:parse too big check size=%d", size_check)
+	end
+
+	--printf("xr_logic-parse: lst: %d set: %d check: %d", #lst, size_set, size_check)
 	return lst
-end
+end]]
 
 function cfg_get_number_and_condlist(ini, section, field, npc)
 	local str = utils.cfg_get_string(ini, section, field, npc, false, "")
@@ -1005,7 +938,7 @@ function cfg_get_number_and_condlist(ini, section, field, npc)
 
 	t.name = field
 	t.v1 = tonumber(par[1])
-	t.condlist = parse_condlist(npc, section, field, par[2])
+	t.condlist = par[2]
 
 	return t
 end
@@ -1025,7 +958,7 @@ function cfg_get_string_and_condlist(ini, section, field, npc)
 
 	t.name = field
 	t.v1 = par[1]
-	t.condlist = parse_condlist(npc, section, field, par[2])
+	t.condlist = par[2]
 
 	return t
 end
@@ -1046,7 +979,7 @@ function cfg_get_two_strings_and_condlist(ini, section, field, npc)
 	t.name = field
 	t.v1 = par[1]
 	t.v2 = par[2]
-	t.condlist = parse_condlist(npc, section, field, par[3])
+	t.condlist = par[3]
 
 	return t
 end
@@ -1069,6 +1002,26 @@ function cfg_get_condlist(ini, section, field, npc)
 
 	return t
 end
+
+function cfg_get_condlist2(ini, section, field, npc)
+	local str = utils.cfg_get_string(ini, section, field, npc, false, "")
+	if not str then
+		return nil
+	end
+
+	local par = utils.parse_params(str)
+	if not par[1] then
+		abort_syntax_error_in_cond(npc, section, field)
+	end
+
+	local t = {}
+
+	t.name = field
+	t.condlist = par[1]
+
+	return t
+end
+
 
 function add_condition(lst, at, cond)
 	if cond then
@@ -1111,13 +1064,13 @@ function cfg_get_switch_conditions(ini, section, npc)
 	add_conditions( cfg_get_number_and_condlist, "on_actor_dist_ge"      )
 	add_conditions( cfg_get_number_and_condlist, "on_actor_dist_ge_nvis" )
 	add_conditions( cfg_get_string_and_condlist, "on_signal"             )
-	add_conditions( cfg_get_condlist           , "on_info"               )
+	add_conditions( cfg_get_condlist2           , "on_info"               )
 	add_conditions( cfg_get_number_and_condlist, "on_timer"              )
 	add_conditions( cfg_get_number_and_condlist, "on_game_timer"         )
 	add_conditions( cfg_get_string_and_condlist, "on_actor_in_zone"      )
 	add_conditions( cfg_get_string_and_condlist, "on_actor_not_in_zone"  )
-	add_conditions( cfg_get_condlist           , "on_actor_inside"       )
-	add_conditions( cfg_get_condlist           , "on_actor_outside"      )
+	add_conditions( cfg_get_condlist2           , "on_actor_inside"       )
+	add_conditions( cfg_get_condlist2           , "on_actor_outside"      )
 	add_conditions( cfg_get_npc_and_zone       , "on_npc_in_zone"        )
 	add_conditions( cfg_get_npc_and_zone       , "on_npc_not_in_zone"    )
 
@@ -1135,14 +1088,14 @@ function cfg_get_overrides(ini, section, npc)
 
 	local tmp			= utils.cfg_get_string(ini, section, "heli_hunter", npc, false, "")
 	if tmp then
-		l.heli_hunter	= xr_logic.parse_condlist(npc, section, "heli_hunter", tmp)
+		l.heli_hunter	= tmp
 	end
 
 --	l.wounded_enabled   = utils.cfg_get_bool(ini, section, "wounded_enabled", npc, false)
-	l.combat_ignore     = cfg_get_condlist(ini, section, "combat_ignore_cond", npc)
+	l.combat_ignore     = cfg_get_condlist2(ini, section, "combat_ignore_cond", npc)
 	l.combat_ignore_keep_when_attacked = utils.cfg_get_bool(ini, section, "combat_ignore_keep_when_attacked", npc, false)
 	l.combat_type       = cfg_get_condlist(ini, section, "combat_type", npc)
-	l.on_combat         = cfg_get_condlist(ini, section, "on_combat", npc)
+	l.on_combat         = cfg_get_condlist2(ini, section, "on_combat", npc)
 --	l.companion_enabled = utils.cfg_get_bool(ini, section, "companion_enabled", npc, false)
 	local st = db.storage[npc:id()]
 	if ini:line_exist(st.section_logic, "post_combat_time") then
@@ -1151,9 +1104,9 @@ function cfg_get_overrides(ini, section, npc)
 		l.min_post_combat_time,l.max_post_combat_time = utils.r_2nums( ini, section, "post_combat_time", 10, 15 )
 	end
 	if ini:line_exist(section, "on_offline") then
-		l.on_offline_condlist = xr_logic.parse_condlist(npc, section, "on_offline", utils.cfg_get_string(ini, section, "on_offline", npc, false, "", "nil"))
+		l.on_offline_condlist = utils.cfg_get_string(ini, section, "on_offline", npc, false, "", "nil")
 	else
-		l.on_offline_condlist =  xr_logic.parse_condlist(npc, st.section_logic, "on_offline", utils.cfg_get_string(ini, st.section_logic, "on_offline", npc, false, "", "nil"))
+		l.on_offline_condlist = utils.cfg_get_string(ini, st.section_logic, "on_offline", npc, false, "", "nil")
 	end
 	if string.find(section, "kamp") ~= nil then
 		l.soundgroup		= utils.cfg_get_string(ini, section, "center_point", npc, false, "")

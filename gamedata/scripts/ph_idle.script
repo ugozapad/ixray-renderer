@@ -69,7 +69,7 @@ function set_scheme(npc, ini, scheme, section, gulag_name)
 
 	st.hit_on_bone = utils.parse_data_1v(npc, utils.cfg_get_string(ini, section, "hit_on_bone", npc, false, ""))
 	st.nonscript_usable = utils.cfg_get_bool(ini, section, "nonscript_usable", npc, false)
-	st.on_use    = xr_logic.cfg_get_condlist(ini, section, "on_use", npc)
+	st.on_use    = xr_logic.cfg_get_condlist2(ini, section, "on_use", npc)
 	
 	st.tips  = utils.cfg_get_string(ini, section, "tips", npc, false, "", "")
 	

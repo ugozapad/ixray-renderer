@@ -936,7 +936,7 @@ function se_smart_terrain:get_smart_props()
 			if self.respawn_point ~= nil and self.already_spawned ~= nil then
 					props = props.."\\nalready_spawned :\n"
 					for k,v in pairs(self.already_spawned) do
-						props = props.."["..k.."] = "..v.num.."("..xr_logic.pick_section_from_condlist(db.actor, nil,self.respawn_params[k].num)..")\\n"
+						props = props.."["..k.."] = "..v.num.."("..xr_parser.pick_section_from_condlist(db.actor, nil, "smart_terrain", "respawn_params", self.respawn_params[k].num)..")\\n"
 					end
 					if self.last_respawn_update then
 						props = props.."\\ntime_to_spawn:"..tostring(self.respawn_time - game.get_game_time():diffSec(self.last_respawn_update)).."\\n"

@@ -28,7 +28,7 @@ public:
 	bool isSymbolEvent(char nSymbol) const;
 
 	// on stack implementation, no allocations
-	const char* lua_pickSectionFromCondlist(luabind::object pServerPlayer, luabind::object pServerObject, const char* pSectionName, const char* pFieldName, const char* pSourceName);
+	const char* lua_pickSectionFromCondlist(luabind::object pServerPlayer, luabind::object pServerObject, const char* pSourceName);
 
 	static void script_register(lua_State* L);
 
