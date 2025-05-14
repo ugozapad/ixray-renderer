@@ -43,6 +43,7 @@ enum EDDListType{
 		iDeadBodyBag,
 		iQuickSlot,
 		iTrashSlot,
+		iStackList,
 		iListTypeMax
 };
 
@@ -91,6 +92,7 @@ protected:
 
 	CUIDragDropListEx*			m_pInventoryBeltList;
 	CUIDragDropListEx*			m_pInventoryBagList;
+	CUIDragDropListEx*			m_pInventoryStackList;
 
 	CUIDragDropListEx*			m_pTradeActorBagList;
 	CUIDragDropListEx*			m_pTradeActorList;
@@ -230,12 +232,15 @@ protected:
 	bool				OnItemStartDrag				(CUICellItem* itm);
 	bool				OnItemDbClick				(CUICellItem* itm);
 	bool				OnItemSelected				(CUICellItem* itm);
+	bool				OnItemDeselected				(CUICellItem* itm);
 	bool				OnItemRButtonClick			(CUICellItem* itm);
 	bool				OnItemFocusReceive			(CUICellItem* itm);
 	bool				OnItemFocusLost				(CUICellItem* itm);
 	bool				OnItemFocusedUpdate			(CUICellItem* itm);
 	void				OnDragItemOnTrash			(CUIDragItem* item, bool b_receive);
 	bool						OnItemDropped				(PIItem itm, CUIDragDropListEx* new_owner, CUIDragDropListEx* old_owner);
+
+	void ActivateStackList(CUICellItem* cell_item);
 
 	void						ResetMode					();
 	void						InitInventoryMode			();
