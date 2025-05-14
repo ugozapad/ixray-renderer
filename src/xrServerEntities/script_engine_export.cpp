@@ -13,6 +13,7 @@
 
 #include "alife_human_brain.h"
 #include "alife_monster_brain.h"
+#include "script_xr_logic.h"
 
 #ifdef XRSE_FACTORY_EXPORTS
 
@@ -279,5 +280,6 @@ void export_classes	(lua_State *L)
 	CPhysicsShellHolder::script_register(L);
 	CWeaponAmmo::script_register(L);
 	CGameTaskManager::script_register(L);
+	CScriptXRParser::script_register(L);
 #endif
 }
