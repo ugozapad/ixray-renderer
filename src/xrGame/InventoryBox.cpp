@@ -31,21 +31,24 @@ void CInventoryBox::OnEvent(NET_Packet& P, u16 type)
 	case GE_OWNERSHIP_TAKE:
 		{
 			u16 id;
-            P.r_u16					(id);
-			CObject* itm			= Level().Objects.net_Find(id);  VERIFY(itm);
-			m_items.push_back		(id);
-			itm->H_SetParent		(this);
-			itm->setVisible			(FALSE);
-			itm->setEnabled			(FALSE);
+            P.r_u16(id);
+			CObject* itm = Level().Objects.net_Find(id);
+			VERIFY(itm);
+			m_items.push_back(id);
+			itm->H_SetParent(this);
+			itm->setVisible(FALSE);
+			itm->setEnabled(FALSE);
 
-			CInventoryItem *pIItem	= smart_cast<CInventoryItem*>(itm);
-			VERIFY					(pIItem);
-			if( CurrentGameUI() )
+			PIItem pIItem = itm->cast_inventory_item();
+			VERIFY(pIItem);
+			if (CurrentGameUI())
 			{
-				if(CurrentGameUI()->ActorMenu().GetMenuMode()==mmDeadBodySearch)
+				if (CurrentGameUI()->ActorMenu().GetMenuMode() == mmDeadBodySearch)
 				{
-					if(this==CurrentGameUI()->ActorMenu().GetInvBox())
+					if (this == CurrentGameUI()->ActorMenu().GetInvBox())
+					{
 						CurrentGameUI()->OnInventoryAction(pIItem, GE_OWNERSHIP_TAKE);
+					}
 				}
 			};
 		}break;
@@ -55,29 +58,33 @@ void CInventoryBox::OnEvent(NET_Packet& P, u16 type)
 		{
 			u16 id;
             P.r_u16(id);
-			CObject* itm = Level().Objects.net_Find(id);  VERIFY(itm);
+			CObject* itm = Level().Objects.net_Find(id);
+			VERIFY(itm);
 			xr_vector<u16>::iterator it;
-			it = std::find(m_items.begin(),m_items.end(),id); VERIFY(it!=m_items.end());
-			m_items.erase		(it);
+			it = std::find(m_items.begin(),m_items.end(),id);
+			VERIFY(it!=m_items.end());
+			m_items.erase(it);
 
-			bool just_before_destroy		= !P.r_eof() && P.r_u8();
-			bool dont_create_shell			= (type==GE_TRADE_SELL) || just_before_destroy;
+			bool just_before_destroy = !P.r_eof() && P.r_u8();
+			bool dont_create_shell = (type==GE_TRADE_SELL) || just_before_destroy;
 
-			itm->H_SetParent	(nullptr, dont_create_shell);
+			itm->H_SetParent(nullptr, dont_create_shell);
 
 			if (!IsGameTypeSingle() && CurrentGameUI())
 			{
 				if (CurrentGameUI()->ActorMenu().GetMenuMode() == mmDeadBodySearch)
 				{
 					if (this == CurrentGameUI()->ActorMenu().GetInvBox())
-						CurrentGameUI()->OnInventoryAction(smart_cast<CInventoryItem*>(itm), GE_OWNERSHIP_REJECT);
+					{
+						CurrentGameUI()->OnInventoryAction(itm->cast_inventory_item(), GE_OWNERSHIP_REJECT);
+					}
 				}
 			}
 
-			if( m_in_use )
+			if (m_in_use)
 			{
-				CGameObject* GO		= smart_cast<CGameObject*>(itm);
-				Actor()->callback(GameObject::eInvBoxItemTake)( this->lua_game_object(), GO->lua_game_object() );
+				CGameObject* GO = itm->cast_game_object();
+				Actor()->callback(GameObject::eInvBoxItemTake)(this->lua_game_object(), GO->lua_game_object());
 			}
 		}break;
 	};
@@ -118,13 +125,12 @@ void CInventoryBox::net_Relcase(CObject* O)
 #include "inventory_item.h"
 void CInventoryBox::AddAvailableItems(TIItemContainer& items_container) const
 {
-	xr_vector<u16>::const_iterator it = m_items.begin();
-	xr_vector<u16>::const_iterator it_e = m_items.end();
 
-	for(;it!=it_e;++it)
+	for (u16 id : m_items)
 	{
-		PIItem itm = smart_cast<PIItem>(Level().Objects.net_Find(*it));VERIFY(itm);
-		items_container.push_back	(itm);
+		PIItem itm = Level().Objects.net_Find(id)->cast_inventory_item();
+		VERIFY(itm);
+		items_container.push_back(itm);
 	}
 }
 

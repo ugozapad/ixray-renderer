@@ -1128,7 +1128,7 @@ void player_hud::load(const shared_str& player_hud_sect)
 	m_sect_name = player_hud_sect;
 
 	const shared_str& model_name = pSettings->r_string(player_hud_sect, "visual");
-	m_model = smart_cast<IKinematicsAnimated*>(::Render->model_Create(model_name.c_str()));
+	m_model = ::Render->model_Create(model_name.c_str())->dcast_PKinematicsAnimated();
 
 	auto pathOmfs = EngineExternal().GetPlayerHudOmfAdditional();
 	if (pathOmfs && pathOmfs[0])
@@ -1395,7 +1395,7 @@ void player_hud::update(const Fmatrix& cam_trans)
 	}
 
 	{
-		CMissile* pMiss = m_attached_items[0] ? smart_cast<CMissile*>(m_attached_items[0]->m_parent_hud_item) : NULL;
+		CMissile* pMiss = m_attached_items[0] ? smart_cast<CMissile*>(m_attached_items[0]->m_parent_hud_item) : nullptr;
 		bool throwing_missile = pMiss && (pMiss->GetState() >= CMissile::EMissileStates::eThrowStart && pMiss->GetState() <= CMissile::EMissileStates::eThrow);
 		bool left_hand_active = !throwing_missile && m_attached_items[1];
 
@@ -1434,7 +1434,7 @@ u32 player_hud::anim_play(u16 part, const MotionID& M, BOOL bMixIn, const CMotio
 		part_id = m_model->partitions().part_id((part==0)?"right_hand":"left_hand");
 	}
 
-	CMissile* pMiss = m_attached_items[0] ? smart_cast<CMissile*>(m_attached_items[0]->m_parent_hud_item) : NULL;
+	CMissile* pMiss = m_attached_items[0] ? smart_cast<CMissile*>(m_attached_items[0]->m_parent_hud_item) : nullptr;
 	bool throwing_missile = pMiss && (pMiss->GetState()>=CMissile::EMissileStates::eThrowStart&&pMiss->GetState()<=CMissile::EMissileStates::eThrow) && attached_item(1);
 	if (throwing_missile)//is the only when attached_item 1 is active and we have started throwing the item
 	{
@@ -1595,7 +1595,7 @@ bool player_hud::allow_activation(CHudItem* item)
 			CActor* pActor = smart_cast<CActor*>(pEntity);
 			if(pActor)
 			{
-				CHudItem* pDetector = smart_cast<CHudItem*>(pActor->inventory().ItemFromSlot(DETECTOR_SLOT));
+				CHudItem* pDetector = pActor->inventory().ItemFromSlot(DETECTOR_SLOT) ? pActor->inventory().ItemFromSlot(DETECTOR_SLOT)->cast_hud_item() : nullptr;
 				if(pDetector && pDetector->GetState()!=CHUDState::eHidden)
 					return pDetector->CheckCompatibility(item);
 			}
@@ -1727,7 +1727,7 @@ void player_hud::OnMovementChanged(ACTOR_DEFS::EMoveCommand cmd)
 				{
 					if(pActor->inventory().ActiveItem())
 					{
-						CHudItem* pWeap = smart_cast<CHudItem*>(pActor->inventory().ActiveItem());
+						CHudItem* pWeap = pActor->inventory().ActiveItem()->cast_hud_item();
 						if(pWeap && pWeap->GetState()==CHUDState::eIdle)
 							pWeap->PlayAnimIdle();
 					}
@@ -1743,7 +1743,7 @@ void player_hud::OnMovementChanged(ACTOR_DEFS::EMoveCommand cmd)
 				{
 					if(pActor->inventory().GetActiveSlot() != NO_ACTIVE_SLOT)
 					{
-						CHudItem* pWeap = smart_cast<CHudItem*>(pActor->inventory().ActiveItem());
+						CHudItem* pWeap = pActor->inventory().ActiveItem()->cast_hud_item();
 						if(pWeap && pWeap->GetState()!=CHUDState::eHidden)
 							pWeap->OnMovementChanged(cmd);
 					}

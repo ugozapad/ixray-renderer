@@ -116,7 +116,7 @@ void CInventory::Clear()
 
 void CInventory::Take(CGameObject *pObj, bool bNotActivate, bool strict_placement)
 {
-	CInventoryItem *pIItem				= smart_cast<CInventoryItem*>(pObj);
+	CInventoryItem *pIItem				= pObj->cast_inventory_item();
 	VERIFY								(pIItem);
 	VERIFY								(pIItem->m_pInventory==nullptr);
 	VERIFY								(CanTakeItem(pIItem));
@@ -134,8 +134,9 @@ void CInventory::Take(CGameObject *pObj, bool bNotActivate, bool strict_placemen
 		if (GetOwner()->object_id() == actor_id &&
 			this->m_pOwner->object_id() == actor_id) // actors inventory
 		{
-			CWeaponMagazined* pWeapon = smart_cast<CWeaponMagazined*>(pIItem);
-			if (pWeapon && pWeapon->strapped_mode()) {
+			CWeaponMagazined* pWeapon = pIItem->cast_weapon_magazined();
+			if (pWeapon && pWeapon->strapped_mode())
+			{
 				pWeapon->strapped_mode(false);
 				Ruck(pWeapon);
 			}
@@ -229,7 +230,7 @@ void CInventory::Take(CGameObject *pObj, bool bNotActivate, bool strict_placemen
 
 bool CInventory::DropItem(CGameObject *pObj, bool just_before_destroy, bool dont_create_shell) 
 {
-	CInventoryItem *pIItem				= smart_cast<CInventoryItem*>(pObj);
+	CInventoryItem *pIItem				= pObj->cast_inventory_item();
 	VERIFY								(pIItem);
 	VERIFY								(pIItem->m_pInventory);
 	VERIFY								(pIItem->m_pInventory==this);
@@ -266,7 +267,7 @@ bool CInventory::DropItem(CGameObject *pObj, bool just_before_destroy, bool dont
 			VERIFY			(InSlot(pIItem));
 			if(m_iActiveSlot == pIItem->CurrSlot())
 			{
-				CActor* pActor	= smart_cast<CActor*>(m_pOwner);
+				CActor* pActor	= m_pOwner->cast_actor();
 				if (!pActor || pActor->g_Alive())
 				{
 					if (just_before_destroy)
@@ -299,7 +300,7 @@ bool CInventory::DropItem(CGameObject *pObj, bool just_before_destroy, bool dont
 	pIItem->m_pInventory = nullptr;
 
 
-	m_pOwner->OnItemDrop	(smart_cast<CInventoryItem*>(pObj), just_before_destroy);
+	m_pOwner->OnItemDrop	(pObj->cast_inventory_item(), just_before_destroy);
 
 	CalcTotalWeight					();
 	InvalidateState					();
@@ -529,11 +530,11 @@ void CInventory::Activate(u16 slot, bool bForce)
 		return;
 	}
 
-	if (CActor* actor = smart_cast<CActor*>(m_pOwner))
+	if (CActor* actor = m_pOwner->cast_actor())
 	{
 		if (actor->HudAnimator() && actor->HudAnimator()->IsActive())
 		{
-			if (CHudItem* hud_item = smart_cast<CHudItem*>(ActiveItem()))
+			if (CHudItem* hud_item = ActiveItem() ? ActiveItem()->cast_hud_item() : nullptr)
 			{
 				if (hud_item->SendDeactivateItem())
 				{
@@ -626,8 +627,11 @@ PIItem CInventory::ItemFromSlot(u16 slot) const
 
 void CInventory::SendActionEvent(u16 cmd, u32 flags) 
 {
-	CActor *pActor = smart_cast<CActor*>(m_pOwner);
-	if (!pActor) return;
+	CActor* pActor = m_pOwner->cast_actor();
+	if (!pActor)
+	{
+		return;
+	}
 
 	NET_Packet		P;
 	pActor->u_EventGen		(P,GE_INV_ACTION, pActor->ID());
@@ -640,7 +644,7 @@ void CInventory::SendActionEvent(u16 cmd, u32 flags)
 
 bool CInventory::Action(u16 cmd, u32 flags) 
 {
-	CActor *pActor = smart_cast<CActor*>(m_pOwner);
+	CActor *pActor = m_pOwner->cast_actor();
 	
 	if (pActor)
 	{
@@ -1057,44 +1061,66 @@ CInventoryItem *CInventory::get_object_by_id(ALife::_OBJECT_ID tObjectID)
 
 bool CInventory::Eat(PIItem pIItem)
 {
-	//устанаовить съедобна ли вещь
-	CEatableItem* pItemToEat = smart_cast<CEatableItem*>(pIItem);
-	if ( !pItemToEat )			return false;
+	//установить съедобна ли вещь
+	CEatableItem* pItemToEat = pIItem->cast_eatable_item();
+	if (!pItemToEat)
+	{
+		return false;
+	}
 
-	CEntityAlive *entity_alive = smart_cast<CEntityAlive*>(m_pOwner);
-	if ( !entity_alive )		return false;
+	CEntityAlive* entity_alive = m_pOwner->cast_entity_alive();
+	if (!entity_alive)
+	{
+		return false;
+	}
 
-	CInventoryOwner* IO	= smart_cast<CInventoryOwner*>(entity_alive);
-	if ( !IO )					return false;
+	CInventoryOwner* IO	= entity_alive->cast_inventory_owner();
+	if (!IO)
+	{
+		return false;
+	}
 	
 	CInventory* pInventory = pItemToEat->m_pInventory;
-	if ( !pInventory || pInventory != this )	return false;
-	if ( pInventory != IO->m_inventory )		return false;
-	if ( pItemToEat->object().H_Parent()->ID() != entity_alive->ID() )		return false;
+	if (!pInventory || pInventory != this)
+	{
+		return false;
+	}
+
+	if (pInventory != IO->m_inventory)
+	{
+		return false;
+	}
+
+	if (pItemToEat->object().H_Parent()->ID() != entity_alive->ID())
+	{
+		return false;
+	}
 	
 	if (!pItemToEat->UseBy(entity_alive))
+	{
 		return false;
+	}
 
 #ifdef MP_LOGGING
 	Msg( "--- Actor [%d] use or eat [%d][%s]", entity_alive->ID(), pItemToEat->object().ID(), pItemToEat->object().cNameSect().c_str() );
 #endif // MP_LOGGING
 
-	luabind::functor<bool>	funct;
+	luabind::functor<bool> funct;
 	if (ai().script_engine().functor("_G.CInventory__eat", funct))
 	{
-		if (!funct(smart_cast<CGameObject*>(pItemToEat->object().H_Parent())->lua_game_object(), (smart_cast<CGameObject*>(pIItem))->lua_game_object()))
+		if (!funct(smart_cast<CGameObject*>(pItemToEat->object().H_Parent())->lua_game_object(), (pIItem->cast_game_object()->lua_game_object())))
 			return false;
 	}
 
 	if (Actor()->m_inventory == this)
 	{
 		if (IsGameTypeSingle())
-			Actor()->callback(GameObject::eUseObject)((smart_cast<CGameObject*>(pIItem))->lua_game_object());
+			Actor()->callback(GameObject::eUseObject)(pIItem->cast_game_object()->lua_game_object());
 
 		if (pItemToEat->IsUsingCondition() && pItemToEat->GetRemainingUses() < 1 && pItemToEat->CanDelete())
 			CurrentGameUI()->ActorMenu().RefreshCurrentItemCell();
 		
-		CurrentGameUI()->ActorMenu().SetCurrentItem(NULL);
+		CurrentGameUI()->ActorMenu().SetCurrentItem(nullptr);
 	}
 
 	if (pItemToEat->Empty())
@@ -1110,24 +1136,44 @@ bool CInventory::Eat(PIItem pIItem)
 
 bool CInventory::ClientEat(PIItem pIItem)
 {
-	CEatableItem* pItemToEat = smart_cast<CEatableItem*>(pIItem);
-	if ( !pItemToEat )			return false;
+	CEatableItem* pItemToEat = pIItem->cast_eatable_item();
+	if (!pItemToEat)
+	{
+		return false;
+	}
 
-	CEntityAlive *entity_alive = smart_cast<CEntityAlive*>(m_pOwner);
-	if ( !entity_alive )		return false;
+	CEntityAlive* entity_alive = m_pOwner->cast_entity_alive();
+	if (!entity_alive)
+	{
+		return false;
+	}
 
-	CInventoryOwner* IO	= smart_cast<CInventoryOwner*>(entity_alive);
-	if ( !IO )					return false;
+	CInventoryOwner* IO = entity_alive->cast_inventory_owner();
+	if (!IO)
+	{
+		return false;
+	}
 	
 	CInventory* pInventory = pItemToEat->m_pInventory;
-	if ( !pInventory || pInventory != this )	return false;
-	if ( pInventory != IO->m_inventory )		return false;
-	if ( pItemToEat->object().H_Parent()->ID() != entity_alive->ID() )		return false;
+	if (!pInventory || pInventory != this)
+	{
+		return false;
+	}
+
+	if (pInventory != IO->m_inventory)
+	{
+		return false;
+	}
+
+	if (pItemToEat->object().H_Parent()->ID() != entity_alive->ID())
+	{
+		return false;
+	}
 	
-	NET_Packet						P;
-	CGameObject::u_EventGen			(P, GEG_PLAYER_ITEM_EAT, pIItem->parent_id());
-	P.w_u16							(pIItem->object().ID());
-	CGameObject::u_EventSend		(P);
+	NET_Packet P;
+	CGameObject::u_EventGen(P, GEG_PLAYER_ITEM_EAT, pIItem->parent_id());
+	P.w_u16(pIItem->object().ID());
+	CGameObject::u_EventSend(P);
 	return true;
 }
 
@@ -1244,7 +1290,7 @@ bool CInventory::CanTakeItem(CInventoryItem *inventory_item) const
 		if((*it)->object().ID() == inventory_item->object().ID()) break;
 	VERIFY3(it == m_all.end(), "item already exists in inventory",*inventory_item->object().cName());
 
-	CActor* pActor = smart_cast<CActor*>(m_pOwner);
+	CActor* pActor = m_pOwner->cast_actor();
 	CCar* pCar = smart_cast<CCar*>(m_pOwner);
 	//актер всегда может взять вещь
 	if((!pCar && !pActor) && (TotalWeight() + inventory_item->Weight() > m_pOwner->MaxCarryWeight()))
@@ -1254,13 +1300,11 @@ bool CInventory::CanTakeItem(CInventoryItem *inventory_item) const
 }
 
 
-u32  CInventory::BeltWidth() const
+u32 CInventory::BeltWidth() const
 {
-	CActor* pActor = smart_cast<CActor*>( m_pOwner );
-	if ( pActor )
+	if (CActor* pActor = m_pOwner->cast_actor())
 	{
-		CCustomOutfit* outfit = pActor->GetOutfit();
-		if ( outfit )
+		if (CCustomOutfit* outfit = pActor->GetOutfit())
 		{
 			return outfit->get_artefact_count();
 		}
@@ -1268,52 +1312,60 @@ u32  CInventory::BeltWidth() const
 	return 0; //m_iMaxBelt;
 }
 
-void  CInventory::AddAvailableItems(TIItemContainer& items_container, bool for_trade) const
+void CInventory::AddAvailableItems(TIItemContainer& items_container, bool for_trade) const
 {
-	for(TIItemContainer::const_iterator it = m_ruck.begin(); m_ruck.end() != it; ++it) 
+	for (PIItem pIItem : m_ruck)
 	{
-		PIItem pIItem = *it;
-		if(!for_trade || pIItem->CanTrade())
+		if (!for_trade || pIItem->CanTrade())
+		{
 			items_container.push_back(pIItem);
+		}
 	}
 
-	if(m_bBeltUseful)
+	if (m_bBeltUseful)
 	{
-		for(TIItemContainer::const_iterator it = m_belt.begin(); m_belt.end() != it; ++it) 
+		for (PIItem pIItem : m_belt)
 		{
-			PIItem pIItem = *it;
-			if(!for_trade || pIItem->CanTrade())
+			if (!for_trade || pIItem->CanTrade())
+			{
 				items_container.push_back(pIItem);
+			}
 		}
 	}
 	
-	CAI_Stalker* pOwner = smart_cast<CAI_Stalker*>(m_pOwner);
-	if (pOwner && !pOwner->g_Alive()) {
+	CAI_Stalker* pOwner = m_pOwner->cast_stalker();
+	if (pOwner && !pOwner->g_Alive())
+	{
 		std::uint16_t I = FirstSlot();
 		std::uint16_t E = LastSlot();
-		for (; I <= E; ++I) {
+		for (; I <= E; ++I)
+		{
 			PIItem item = ItemFromSlot(I);
 			if (item && (item->BaseSlot() != BOLT_SLOT))
 				items_container.push_back(item);
 		}
 	}
-	else if (m_bSlotsUseful) {
+	else if (m_bSlotsUseful)
+	{
 		u16 I = FirstSlot();
 		u16 E = LastSlot();
 		for(;I<=E;++I)
 		{
 			PIItem item = ItemFromSlot(I);
-			if(item && (!for_trade || item->CanTrade())  )
+			if (item && (!for_trade || item->CanTrade()))
 			{
 				const auto& Slot = m_slots.find(I);
-				if (!(*Slot).second.m_bPersistent || item->BaseSlot() == GRENADE_SLOT) {
-					if (pOwner) {
+				if (!(*Slot).second.m_bPersistent || item->BaseSlot() == GRENADE_SLOT)
+				{
+					if (pOwner)
+					{
 						std::uint32_t slot = item->BaseSlot();
 
 						if (slot != INV_SLOT_3 /* && slot != INV_SLOT_2*/)
 							items_container.push_back(item);
 					}
-					else {
+					else
+					{
 						items_container.push_back(item);
 					}
 				}
@@ -1322,30 +1374,32 @@ void  CInventory::AddAvailableItems(TIItemContainer& items_container, bool for_t
 	}		
 }
 
-bool CInventory::isBeautifulForActiveSlot	(CInventoryItem *pIItem)
+bool CInventory::isBeautifulForActiveSlot(CInventoryItem *pIItem)
 {
 	if (!IsGameTypeSingle()) 
-		return (true);
+	{
+		return true;
+	}
 
 	u16 I = FirstSlot();
 	u16 E = LastSlot();
-	for(;I<=E;++I)
+	for (;I<=E;++I)
 	{
 		PIItem item = ItemFromSlot(I);
 		if (item && item->IsNecessaryItem(pIItem))
-			return		(true);
+		{
+			return true;
+		}
 	}
-	return				(false);
+	return false;
 }
 
 //.#include "WeaponHUD.h"
 void CInventory::Items_SetCurrentEntityHud(bool current_entity)
 {
-	TIItemContainer::iterator it;
-	for(it = m_all.begin(); m_all.end() != it; ++it) 
+	for (PIItem pIItem : m_all)
 	{
-		PIItem pIItem = *it;
-		CWeapon* pWeapon = smart_cast<CWeapon*>(pIItem);
+		CWeapon* pWeapon = pIItem->cast_weapon();
 		if (pWeapon)
 		{
 			pWeapon->InitAddons();

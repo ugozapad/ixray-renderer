@@ -539,7 +539,7 @@ bool CUIActorMenu::TryActiveSlot(CUICellItem* itm)
 
 bool CUIActorMenu::ToSlotScript(CScriptGameObject* GO, bool force_place, u16 slot_id)
 {
-	CInventoryItem* iitem = smart_cast<CInventoryItem*>(GO->object().dcast_CObject());
+	CInventoryItem* iitem = GO->object().dcast_CObject()->cast_inventory_item();
 
 	if (!iitem || !m_pActorInvOwner->inventory().InRuck(iitem))
 		return false;
@@ -576,9 +576,9 @@ bool CUIActorMenu::ToSlot(CUICellItem* itm, bool force_place, u16 slot_id)
 			return false;
 	}
 
-	if(m_pActorInvOwner->inventory().CanPutInSlot(iitem, slot_id))
+	if (m_pActorInvOwner->inventory().CanPutInSlot(iitem, slot_id))
 	{
-		CUIDragDropListEx* new_owner		= GetSlotList(slot_id);
+		CUIDragDropListEx* new_owner = GetSlotList(slot_id);
 
 		if ( slot_id == GRENADE_SLOT || !new_owner )
 		{
@@ -587,13 +587,13 @@ bool CUIActorMenu::ToSlot(CUICellItem* itm, bool force_place, u16 slot_id)
 
 		if(slot_id==OUTFIT_SLOT)
 		{
-			CCustomOutfit* pOutfit = smart_cast<CCustomOutfit*>(iitem);
-			if(pOutfit && !pOutfit->bIsHelmetAvaliable)
+			CCustomOutfit* pOutfit = iitem->cast_outfit();
+			if (pOutfit && !pOutfit->bIsHelmetAvaliable)
 			{
-				CUIDragDropListEx* helmet_list		= GetSlotList(HELMET_SLOT);
-				if(helmet_list->ItemsCount()==1)
+				CUIDragDropListEx* helmet_list = GetSlotList(HELMET_SLOT);
+				if (helmet_list->ItemsCount() == 1)
 				{
-					CUICellItem* helmet_cell		= helmet_list->GetItemIdx(0);
+					CUICellItem* helmet_cell = helmet_list->GetItemIdx(0);
 					ToBag(helmet_cell, false);
 				}
 			}
@@ -644,10 +644,10 @@ bool CUIActorMenu::ToSlot(CUICellItem* itm, bool force_place, u16 slot_id)
 		VERIFY								(result);
 
 		result								= ToSlot(itm, false, slot_id);
-		if(b_own_item && result && slot_id==DETECTOR_SLOT)
+		if (b_own_item && result && slot_id == DETECTOR_SLOT)
 		{
-			CCustomDetector* det			= smart_cast<CCustomDetector*>(iitem);
-			det->ToggleDetector				(g_player_hud->attached_item(0)!=nullptr, true);
+			CCustomDetector* det = iitem->cast_custom_detector();
+			det->switch_detector();
 		}
 
 		return result;
@@ -706,7 +706,7 @@ bool CUIActorMenu::ToBag(CUICellItem* itm, bool b_use_cursor_pos)
 
 bool CUIActorMenu::ToBeltScript(CScriptGameObject* GO, bool b_use_cursor_pos)
 {
-	CInventoryItem* iitem = smart_cast<CInventoryItem*>(GO->object().dcast_CObject());
+	CInventoryItem* iitem = GO->object().dcast_CObject()->cast_inventory_item();
 
 	if (!iitem || !m_pActorInvOwner->inventory().InRuck(iitem))
 		return false;
@@ -957,9 +957,9 @@ void CUIActorMenu::PropertiesBoxForSlots( PIItem item, bool& b_show )
 		return;
 	}
 
-	CCustomOutfit* pOutfit	= smart_cast<CCustomOutfit*>( item );
-	CHelmet* pHelmet		= smart_cast<CHelmet*>		( item );
-	CInventory&  inv		= m_pActorInvOwner->inventory();
+	CCustomOutfit* pOutfit	= item->cast_outfit();
+	CHelmet* pHelmet = item->cast_helmet();
+	CInventory& inv = m_pActorInvOwner->inventory();
 
 	// Флаг-признак для невлючения пункта контекстного меню: Dreess Outfit, если костюм уже надет
 	bool bAlreadyDressed	= false;
@@ -1018,8 +1018,8 @@ void CUIActorMenu::PropertiesBoxForSlots( PIItem item, bool& b_show )
 void CUIActorMenu::PropertiesBoxForWeapon( CUICellItem* cell_item, PIItem item, bool& b_show )
 {
 	//отсоединение аддонов от вещи
-	CWeapon*	pWeapon = smart_cast<CWeapon*>( item );
-	if ( !pWeapon )
+	CWeapon* pWeapon = item->cast_weapon();
+	if (!pWeapon)
 	{
 		return;
 	}
@@ -1064,7 +1064,8 @@ void CUIActorMenu::PropertiesBoxForWeapon( CUICellItem* cell_item, PIItem item, 
 		{
 			for (u32 i = 0; i < cell_item->ChildsCount(); ++i)
 			{
-				CWeaponMagazined* weap_mag = smart_cast<CWeaponMagazined*>((CWeapon*)cell_item->Child(i)->m_pData);
+				CWeapon* pChildWpn = (CWeapon*)cell_item->Child(i)->m_pData;
+				CWeaponMagazined* weap_mag = pChildWpn ? pChildWpn->cast_weapon_magazined() : nullptr;
 				if (weap_mag != nullptr && (weap_mag->GetAmmoElapsed() || weap_mag->IsChamber() && weap_mag->GetAmmoChamberElapsed()))
 				{
 					b = true;
@@ -1080,86 +1081,86 @@ void CUIActorMenu::PropertiesBoxForWeapon( CUICellItem* cell_item, PIItem item, 
 	}
 }
 #include "../../xrEngine/string_table.h"
-void CUIActorMenu::PropertiesBoxForAddon( PIItem item, bool& b_show )
+void CUIActorMenu::PropertiesBoxForAddon(PIItem item, bool& b_show)
 {
 	//присоединение аддонов к активному слоту (2 или 3)
 
-	CScope*				pScope				= smart_cast<CScope*>			(item);
-	CSilencer*			pSilencer			= smart_cast<CSilencer*>		(item);
-	CGrenadeLauncher*	pGrenadeLauncher	= smart_cast<CGrenadeLauncher*>	(item);
-	CInventory*			inv					= &m_pActorInvOwner->inventory();
+	CScope* pScope = item->cast_addon_scope();
+	CSilencer* pSilencer = item->cast_addon_silencer();
+	CGrenadeLauncher* pGrenadeLauncher = item->cast_addon_grenade_launcher();
+	CInventory& inv = m_pActorInvOwner->inventory();
 
-	PIItem	item_in_slot_2 = inv->ItemFromSlot(INV_SLOT_2);
-	PIItem	item_in_slot_3 = inv->ItemFromSlot(INV_SLOT_3);
+	PIItem item_in_slot_2 = inv.ItemFromSlot(INV_SLOT_2);
+	PIItem item_in_slot_3 = inv.ItemFromSlot(INV_SLOT_3);
 
-	if(!item_in_slot_2 && !item_in_slot_3)	return;
-
-	if ( pScope )
+	if (!item_in_slot_2 && !item_in_slot_3)
 	{
-		if ( item_in_slot_2 && item_in_slot_2->CanAttach(pScope) )
+		return;
+	}
+
+	if (pScope)
+	{
+		if (item_in_slot_2 && item_in_slot_2->CanAttach(pScope))
 		{
 			shared_str str = g_pStringTable->translate("st_attach_scope_to_pistol");
 			str.printf("%s %s", str.c_str(), item_in_slot_2->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON );
-//			m_UIPropertiesBox->AddItem( "st_attach_scope_to_pistol",  (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
-		if ( item_in_slot_3 && item_in_slot_3->CanAttach(pScope) )
+		if (item_in_slot_3 && item_in_slot_3->CanAttach(pScope))
 		{
 			shared_str str = EngineExternal()[EEngineExternalGame::EnableInventoryPistolSlot] ? g_pStringTable->translate("st_attach_scope_to_rifle") : g_pStringTable->translate("st_attach_scope_to_pistol");
 			str.printf("%s %s", str.c_str(), item_in_slot_3->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON );
-//			m_UIPropertiesBox->AddItem( "st_attach_scope_to_rifle",  (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
 		return;
 	}
 
-	if ( pSilencer )
+	if (pSilencer)
 	{
-		if ( item_in_slot_2 && item_in_slot_2->CanAttach(pSilencer) )
+		if (item_in_slot_2 && item_in_slot_2->CanAttach(pSilencer))
 		{
 			shared_str str = g_pStringTable->translate("st_attach_silencer_to_pistol");
 			str.printf("%s %s", str.c_str(), item_in_slot_2->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
-		if ( item_in_slot_3 && item_in_slot_3->CanAttach(pSilencer) )
+
+		if (item_in_slot_3 && item_in_slot_3->CanAttach(pSilencer))
 		{
 			shared_str str = EngineExternal()[EEngineExternalGame::EnableInventoryPistolSlot] ? g_pStringTable->translate("st_attach_silencer_to_rifle") : g_pStringTable->translate("st_attach_silencer_to_pistol");
 			str.printf("%s %s", str.c_str(), item_in_slot_3->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
 		return;
 	}
 
-	if ( pGrenadeLauncher )
+	if (pGrenadeLauncher)
 	{
-		if ( item_in_slot_2 && item_in_slot_2->CanAttach(pGrenadeLauncher) )
+		if (item_in_slot_2 && item_in_slot_2->CanAttach(pGrenadeLauncher))
 		{
 			shared_str str = g_pStringTable->translate("st_attach_gl_to_rifle");
 			str.printf("%s %s", str.c_str(), item_in_slot_2->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON );
-//			m_UIPropertiesBox->AddItem( "st_attach_gl_to_pistol",  (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_2, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
-		if ( item_in_slot_3 && item_in_slot_3->CanAttach(pGrenadeLauncher) )
+		if (item_in_slot_3 && item_in_slot_3->CanAttach(pGrenadeLauncher))
 		{
 			shared_str str = g_pStringTable->translate("st_attach_gl_to_rifle");
 			str.printf("%s %s", str.c_str(), item_in_slot_3->m_name.c_str());
-			m_UIPropertiesBox->AddItem( str.c_str(),  (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON );
-//			m_UIPropertiesBox->AddItem( "st_attach_gl_to_rifle",  (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON );
-			b_show			= true;
+			m_UIPropertiesBox->AddItem(str.c_str(), (void*)item_in_slot_3, INVENTORY_ATTACH_ADDON);
+			b_show = true;
 		}
 	}
 }
 
-void CUIActorMenu::PropertiesBoxForUsing( PIItem item, bool& b_show )
+void CUIActorMenu::PropertiesBoxForUsing(PIItem item, bool& b_show)
 {
 	LPCSTR act_str = nullptr;
-	CGameObject* GO = smart_cast<CGameObject*>(item);
-	shared_str	section_name = GO->cNameSect();
+	CGameObject* GO = item->cast_game_object();
+	shared_str section_name = GO->cNameSect();
 
 	//ability to set eat string from settings
 	act_str = READ_IF_EXISTS(pSettings, r_string, section_name, "default_use_text", 0);
@@ -1212,7 +1213,7 @@ void CUIActorMenu::PropertiesBoxForUsing( PIItem item, bool& b_show )
 
 void CUIActorMenu::PropertiesBoxForPlaying(PIItem item, bool& b_show)
 {
-	CPda* pPda = smart_cast<CPda*>(item);
+	CPda* pPda = item->cast_pda();
 	if(!pPda || !pPda->CanPlayScriptFunction())
 		return;
 
@@ -1254,11 +1255,11 @@ void CUIActorMenu::PropertiesBoxForDrop(CUICellItem* cell_item, PIItem item, boo
 	}
 }
 
-void CUIActorMenu::PropertiesBoxForRepair( PIItem item, bool& b_show )
+void CUIActorMenu::PropertiesBoxForRepair(PIItem item, bool& b_show)
 {
-	CCustomOutfit* pOutfit = smart_cast<CCustomOutfit*>( item );
-	CWeapon*       pWeapon = smart_cast<CWeapon*>( item );
-	CHelmet*       pHelmet = smart_cast<CHelmet*>( item );
+	CCustomOutfit* pOutfit = item->cast_outfit();
+	CWeapon*       pWeapon = item->cast_weapon();
+	CHelmet*       pHelmet = item->cast_helmet();
 
 	if ( (pOutfit || pWeapon || pHelmet) && item->GetCondition() < 0.99f )
 	{
@@ -1276,15 +1277,15 @@ void CUIActorMenu::PropertiesBoxForParse(PIItem item, bool& b_show)
 	}
 }
 
-void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
+void CUIActorMenu::ProcessPropertiesBoxClicked(CUIWindow* w, void* d)
 {
-	PIItem			item		= CurrentIItem();
-	CUICellItem*	cell_item	= CurrentItem();
-	if ( !m_UIPropertiesBox->GetClickedItem() || !item || !cell_item || !cell_item->OwnerList() )
+	PIItem item	= CurrentIItem();
+	CUICellItem* cell_item = CurrentItem();
+	if (!m_UIPropertiesBox->GetClickedItem() || !item || !cell_item || !cell_item->OwnerList())
 	{
 		return;
 	}
-	CWeapon* weapon = smart_cast<CWeapon*>( item );
+	CWeapon* weapon = item->cast_weapon();
 
 	switch ( m_UIPropertiesBox->GetClickedItem()->GetTAG() )
 	{
@@ -1296,7 +1297,7 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 		break;	
 	case INVENTORY_EAT2_ACTION:
 	{
-		CGameObject* GO = smart_cast<CGameObject*>(item);
+		CGameObject* GO = item->cast_game_object();
 		LPCSTR functor_name = READ_IF_EXISTS(pSettings, r_string, GO->cNameSect(), "use1_functor", 0);
 		if (functor_name)
 		{
@@ -1311,7 +1312,7 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 	}
 	case INVENTORY_EAT3_ACTION:
 	{
-		CGameObject* GO = smart_cast<CGameObject*>(item);
+		CGameObject* GO = item->cast_game_object();
 		LPCSTR functor_name = READ_IF_EXISTS(pSettings, r_string, GO->cNameSect(), "use2_functor", 0);
 		if (functor_name)
 		{
@@ -1382,10 +1383,10 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 			DetachAddon( weapon->GetScopeName().c_str() );
 			for ( u32 i = 0; i < cell_item->ChildsCount(); ++i )
 			{
-				CUICellItem*	child_itm	= cell_item->Child(i);
-				PIItem			child_iitm	= (PIItem)(child_itm->m_pData);
-				CWeapon* wpn = smart_cast<CWeapon*>( child_iitm );
-				if ( child_iitm && wpn )
+				CUICellItem* child_itm = cell_item->Child(i);
+				PIItem child_iitm = (PIItem)(child_itm->m_pData);
+				CWeapon* wpn = child_iitm ? child_iitm->cast_weapon() : nullptr;
+				if (child_iitm && wpn)
 				{
 					DetachAddon(wpn->GetScopeName().c_str(), child_iitm);
 				}
@@ -1398,10 +1399,10 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 			DetachAddon( weapon->GetSilencerName().c_str() );
 			for ( u32 i = 0; i < cell_item->ChildsCount(); ++i )
 			{
-				CUICellItem*	child_itm	= cell_item->Child(i);
-				PIItem			child_iitm	= (PIItem)(child_itm->m_pData);
-				CWeapon* wpn = smart_cast<CWeapon*>( child_iitm );
-				if ( child_iitm && wpn )
+				CUICellItem* child_itm = cell_item->Child(i);
+				PIItem child_iitm = (PIItem)(child_itm->m_pData);
+				CWeapon* wpn = child_iitm ? child_iitm->cast_weapon() : nullptr;
+				if (child_iitm && wpn)
 				{
 					DetachAddon(wpn->GetSilencerName().c_str(), child_iitm);
 				}
@@ -1414,10 +1415,10 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 			DetachAddon( weapon->GetGrenadeLauncherName().c_str() );
 			for ( u32 i = 0; i < cell_item->ChildsCount(); ++i )
 			{
-				CUICellItem*	child_itm	= cell_item->Child(i);
-				PIItem			child_iitm	= (PIItem)(child_itm->m_pData);
-				CWeapon* wpn = smart_cast<CWeapon*>( child_iitm );
-				if ( child_iitm && wpn )
+				CUICellItem* child_itm = cell_item->Child(i);
+				PIItem child_iitm = (PIItem)(child_itm->m_pData);
+				CWeapon* wpn = child_iitm ? child_iitm->cast_weapon() : nullptr;
+				if (child_iitm && wpn)
 				{
 					DetachAddon(wpn->GetGrenadeLauncherName().c_str(), child_iitm);
 				}
@@ -1432,7 +1433,8 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 		break;
 	case INVENTORY_UNLOAD_MAGAZINE:
 		{
-			CWeaponMagazined* weap_mag = smart_cast<CWeaponMagazined*>((CWeapon*)cell_item->m_pData);
+			CWeapon* weapon = (CWeapon*)cell_item->m_pData;
+			CWeaponMagazined* weap_mag = weapon ? weapon->cast_weapon_magazined() : nullptr;
 			if (weap_mag == nullptr)
 			{
 				break;
@@ -1443,7 +1445,8 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 			for (u32 i = 0; i < cell_item->ChildsCount(); ++i)
 			{
 				CUICellItem* child_itm = cell_item->Child(i);
-				CWeaponMagazined* child_weap_mag = smart_cast<CWeaponMagazined*>((CWeapon*)child_itm->m_pData);
+				weapon = (CWeapon*)child_itm->m_pData;
+				CWeaponMagazined* child_weap_mag = weapon ? weapon->cast_weapon_magazined() : nullptr;
 				if (child_weap_mag != nullptr)
 				{
 					child_weap_mag->UnloadMagazine();
@@ -1460,10 +1463,10 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 		}
 	case INVENTORY_PLAY_ACTION:
 		{
-			CPda* pPda = smart_cast<CPda*>(item);
-			if(!pPda)
-				break;
-			pPda->PlayScriptFunction();
+			if (CPda* pPda = item->cast_pda())
+			{
+				pPda->PlayScriptFunction();
+			}
 			break;
 		}
 	case INVENTORY_PARSE_ITEM:
@@ -1473,7 +1476,7 @@ void CUIActorMenu::ProcessPropertiesBoxClicked( CUIWindow* w, void* d )
 			break;
 		}
 
-		auto actor = smart_cast<CActor*>(Level().CurrentEntity());
+		CActor* actor = Level().CurrentEntity()->cast_actor();
 		if (actor == nullptr) {
 			break;
 		}

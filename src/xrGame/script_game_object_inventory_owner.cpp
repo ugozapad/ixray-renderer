@@ -47,6 +47,7 @@
 #include "Torch.h"
 #include "PhysicObject.h"
 #include "inventory_upgrade_manager.h"
+#include "InventoryBox.h"
 
 bool CScriptGameObject::GiveInfoPortion(LPCSTR info_id)
 {
@@ -238,22 +239,22 @@ void CScriptGameObject::IterateInventory	(luabind::functor<void> functor, luabin
 		functor				(object,(*I)->object().lua_game_object());
 }
 
-#include "InventoryBox.h"
 void CScriptGameObject::IterateInventoryBox	(luabind::functor<void> functor, luabind::object object)
 {
-	CInventoryBox			*inventory_box = smart_cast<CInventoryBox*>(&this->object());
-	if (!inventory_box) {
-		ai().script_engine().script_log		(ScriptStorage::eLuaMessageTypeError,"CScriptGameObject::IterateInventoryBox non-CInventoryBox object !!!");
+	CInventoryBox* inventory_box = this->object().cast_inventory_box();
+	if (!inventory_box)
+	{
+		ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError,"CScriptGameObject::IterateInventoryBox non-CInventoryBox object !!!");
 		return;
 	}
 
-	xr_vector<u16>::const_iterator	I = inventory_box->m_items.begin();
-	xr_vector<u16>::const_iterator	E = inventory_box->m_items.end();
-	for ( ; I != E; ++I)
+	for (u16 id : inventory_box->m_items)
 	{
-		CGameObject* GO		= smart_cast<CGameObject*>(Level().Objects.net_Find(*I));
-		if(GO)
-			functor				(object,GO->lua_game_object());
+		CGameObject* GO	= Level().Objects.net_Find(id)->cast_game_object();
+		if (GO)
+		{
+			functor(object, GO->lua_game_object());
+		}
 	}
 }
 
