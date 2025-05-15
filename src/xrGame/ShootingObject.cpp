@@ -279,7 +279,6 @@ void CShootingObject::LoadFlameParticles (LPCSTR section, LPCSTR prefix)
 	if(pSettings->line_exist(section, full_name))
 		m_sShotParticles = pSettings->r_string (section, full_name);
 
-
 	//текущие партиклы
 	m_sFlameParticlesCurrent = m_sFlameParticles;
 	m_sSmokeParticlesCurrent = m_sSmokeParticles;
@@ -324,6 +323,8 @@ void CShootingObject::StartFlameParticles	()
 {
 	if(0==m_sFlameParticlesCurrent.size()) return;
 
+	Msg("m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent);
+
 	//если партиклы циклические
 	if(m_pFlameParticles && m_pFlameParticles->IsLooped() && 
 		m_pFlameParticles->IsPlaying()) 
@@ -334,7 +335,12 @@ void CShootingObject::StartFlameParticles	()
 
 	StopFlameParticles();
 	m_pFlameParticles = Particles::Details::Create(*m_sFlameParticlesCurrent,FALSE);
+
+	Msg("m_sFlameParticlesCurrent: %s", m_pFlameParticles);
+
 	m_pFlameParticles->SetLiveUpdate(TRUE);
+
+	Msg("m_sFlameParticlesCurrent: %s", m_pFlameParticles);
 
 	Msg("2 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
 

@@ -39,7 +39,7 @@ void CCartridge::Load(LPCSTR section, u8 LocalAmmoType)
 	else
 		param_s.kAirRes			= pSettings->r_float(BULLET_MANAGER_SECTION, "air_resistance_k");
 
-	flameParticle               = READ_IF_EXISTS(pSettings, r_string, section, "particle_ammo", 0);
+	param_s.flameParticle               = READ_IF_EXISTS(pSettings, r_string, section, "particle_ammo", 0);
 
 	m_flags.set					(cfTracer, pSettings->r_bool(section, "tracer"));
 	param_s.buckShot			= pSettings->r_s32(  section, "buck_shot");

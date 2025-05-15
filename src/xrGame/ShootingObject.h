@@ -196,7 +196,7 @@ public:
 	BOOL					m_bUseAimBullet;
 protected:
 	//имя пратиклов для огня
-	shared_str				m_sFlameParticlesCurrent;
+	mutable shared_str				m_sFlameParticlesCurrent;
 	//для выстрела 1м и 2м видом стрельбы
 	shared_str				m_sFlameParticles;
 	//объект партиклов огня

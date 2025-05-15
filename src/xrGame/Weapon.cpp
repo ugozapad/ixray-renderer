@@ -1096,7 +1096,7 @@ bool CWeapon::Action(u16 cmd, u32 flags)
 
 				if (flags & CMD_START)
 				{
-					IsTestAmmo();
+					//IsTestAmmo();
 					FireStart();
 				}
 				else 
@@ -1445,7 +1445,7 @@ bool CWeapon::IsTestAmmo() const
 	//if (m_DefaultCartridge.flameParticle.c_str())
 	{
 		Msg("3 ammo_section: %s", ammo_section.c_str());
-		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = m_DefaultCartridge.flameParticle;
+		m_sFlameParticlesCurrent = m_DefaultCartridge.param_s.flameParticle;
 		Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
 		return true;
 	}

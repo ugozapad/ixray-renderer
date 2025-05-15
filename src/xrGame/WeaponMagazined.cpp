@@ -720,6 +720,8 @@ void CWeaponMagazined::OnShot()
 	PHGetLinearVell				(vel);
 	OnShellDrop					(get_LastSP(), vel);
 	
+	IsTestAmmo();
+
 	// Огонь из ствола
 	StartFlameParticles			();
 

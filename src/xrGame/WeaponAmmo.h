@@ -5,6 +5,7 @@
 struct SCartridgeParam
 {
 	float	kDist, kDisp, kHit/*, kCritical*/, kImpulse, kAP, kAirRes;
+	shared_str flameParticle;
 	int		buckShot;
 	float	impair;
 	float	fWallmarkSize;
@@ -42,7 +43,7 @@ public:
 
 	u8		m_LocalAmmoType;
 
-	shared_str flameParticle;
+	//shared_str flameParticle;
 
 	u16		bullet_material_idx;
 	Flags8	m_flags;
