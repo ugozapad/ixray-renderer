@@ -1441,22 +1441,23 @@ bool CWeapon::IsTestAmmo() const
 
 	shared_str ammo_section = m_ammoTypes[m_ammoType];
 
-	if (ammo_section == "ammo_5.45x39_ap")
+	//if (ammo_section == "ammo_5.45x39_ap")
+	//if (m_DefaultCartridge.flameParticle.c_str())
 	{
 		Msg("3 ammo_section: %s", ammo_section.c_str());
-		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = "weapons\\generic_weapon_gauss";
+		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = m_DefaultCartridge.flameParticle;
 		Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
 		return true;
 	}
-	else
-	{
-		Msg("3 ammo_section: %s", ammo_section.c_str());
-		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = "weapons\\generic_weapon05";
-		Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
-		return true;
-	}
+	//else
+	//{
+	//	Msg("3 ammo_section: %s", ammo_section.c_str());
+	//	const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = "weapons\\generic_weapon05";
+	//	Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+	//	return true;
+	//}
 
-	return false;
+	//return false;
 }
 
 bool CWeapon::GrenadeLauncherAttachable()

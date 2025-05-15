@@ -87,6 +87,9 @@ void SBullet::Init(const Fvector& position,
 	m_u8ColorID				= cartridge.param_s.u8ColorID;
 
 	bullet_material_idx		= cartridge.bullet_material_idx;
+
+	Msg("00000000000000000000000 bullet_material_idx %i", bullet_material_idx);
+
 	VERIFY					( u16(-1) != bullet_material_idx );
 
 	flags.allow_tracer		= !!cartridge.m_flags.test(CCartridge::cfTracer);
