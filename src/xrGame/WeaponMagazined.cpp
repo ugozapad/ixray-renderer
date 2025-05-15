@@ -715,13 +715,13 @@ void CWeaponMagazined::OnShot()
 	// Animation
 	PlayAnimShoot				();
 	
+	IsTestAmmo();
+
 	// Shell Drop
 	Fvector vel; 
 	PHGetLinearVell				(vel);
 	OnShellDrop					(get_LastSP(), vel);
 	
-	IsTestAmmo();
-
 	// Огонь из ствола
 	StartFlameParticles			();
 

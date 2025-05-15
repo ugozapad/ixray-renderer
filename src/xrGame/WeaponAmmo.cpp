@@ -39,7 +39,7 @@ void CCartridge::Load(LPCSTR section, u8 LocalAmmoType)
 	else
 		param_s.kAirRes			= pSettings->r_float(BULLET_MANAGER_SECTION, "air_resistance_k");
 
-	param_s.flameParticle               = READ_IF_EXISTS(pSettings, r_string, section, "particle_ammo", 0);
+	param_s.flameParticle               = READ_IF_EXISTS(pSettings, r_string, section, "particle_ammo", "weapons\\generic_weapon_gauss");
 
 	m_flags.set					(cfTracer, pSettings->r_bool(section, "tracer"));
 	param_s.buckShot			= pSettings->r_s32(  section, "buck_shot");
@@ -105,6 +105,8 @@ void CWeaponAmmo::Load(LPCSTR section)
 	//m_kPierce				= pSettings->r_float(section, "k_pierce");
 	cartridge_param.kAP			= pSettings->r_float(section, "k_ap");
 	cartridge_param.u8ColorID	= READ_IF_EXISTS(pSettings, r_u8, section, "tracer_color_ID", 0);
+
+	cartridge_param.flameParticle = READ_IF_EXISTS(pSettings, r_string, section, "particle_ammo", "weapons\\generic_weapon_gauss");
 
 	if (pSettings->line_exist(section, "k_air_resistance"))
 		cartridge_param.kAirRes		= pSettings->r_float(section, "k_air_resistance");
