@@ -1094,8 +1094,11 @@ bool CWeapon::Action(u16 cmd, u32 flags)
 				if(IsPending())		
 					return false;
 
-				if (flags&CMD_START) 
+				if (flags & CMD_START)
+				{
+					IsTestAmmo();
 					FireStart();
+				}
 				else 
 					FireEnd();
 
@@ -1429,6 +1432,31 @@ bool CWeapon::IsSilencerAttached() const
 	return (ALife::eAddonAttachable == m_eSilencerStatus &&
 			0 != (m_flagsAddOnState&CSE_ALifeItemWeapon::eWeaponAddonSilencer)) || 
 			ALife::eAddonPermanent == m_eSilencerStatus;
+}
+
+bool CWeapon::IsTestAmmo() const
+{
+	if (!m_ammoTypes.size() || m_ammoType >= m_ammoTypes.size())
+		return false;
+
+	shared_str ammo_section = m_ammoTypes[m_ammoType];
+
+	if (ammo_section == "ammo_5.45x39_ap")
+	{
+		Msg("3 ammo_section: %s", ammo_section.c_str());
+		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = "weapons\\generic_weapon_gauss";
+		Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+		return true;
+	}
+	else
+	{
+		Msg("3 ammo_section: %s", ammo_section.c_str());
+		const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = "weapons\\generic_weapon05";
+		Msg("4 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+		return true;
+	}
+
+	return false;
 }
 
 bool CWeapon::GrenadeLauncherAttachable()

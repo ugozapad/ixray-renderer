@@ -336,8 +336,9 @@ void CShootingObject::StartFlameParticles	()
 	m_pFlameParticles = Particles::Details::Create(*m_sFlameParticlesCurrent,FALSE);
 	m_pFlameParticles->SetLiveUpdate(TRUE);
 
+	Msg("2 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+
 	UpdateFlameParticles();
-	
 	
 	CSpectator* tmp_spectr = smart_cast<CSpectator*>(Level().CurrentControlEntity());
 	bool in_hud_mode = IsHudModeNow();

@@ -937,6 +937,7 @@ bool CWeaponMagazined::Action(u16 cmd, u32 flags)
 						bReloadKeyPressed = true;
 
 					Reload();
+					IsTestAmmo();
 				}
 			}
 		} 
@@ -1197,6 +1198,9 @@ void CWeaponMagazined::InitAddons()
 	{		
 		m_sFlameParticlesCurrent	= m_sSilencerFlameParticles;
 		m_sSmokeParticlesCurrent	= m_sSilencerSmokeParticles;
+
+		Msg("0 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+
 		m_sSndShotCurrent			= "sndSilencerShot";
 
 		//подсветка от выстрела
@@ -1207,12 +1211,16 @@ void CWeaponMagazined::InitAddons()
 	{
 		m_sFlameParticlesCurrent	= m_sFlameParticles;
 		m_sSmokeParticlesCurrent	= m_sSmokeParticles;
+
+		Msg("1 m_sFlameParticlesCurrent: %s", m_sFlameParticlesCurrent.c_str());
+
 		m_sSndShotCurrent			= "sndShot";
 
 		//подсветка от выстрела
 		LoadLights		(*cNameSect(), "");
 		ResetSilencerKoeffs();
 	}
+
 
 	inherited::InitAddons();
 }

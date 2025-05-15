@@ -42,6 +42,8 @@ public:
 
 	u8		m_LocalAmmoType;
 
+	shared_str flameParticle;
+
 	u16		bullet_material_idx;
 	Flags8	m_flags;
 
