@@ -150,6 +150,7 @@ public:
 			bool IsGrenadeLauncherAttached	() const;
 			bool IsScopeAttached			() const;
 			bool IsSilencerAttached			() const;
+			bool IsAmmoParticleOverriden    () const;
 
 	virtual bool GrenadeLauncherAttachable();
 	virtual bool ScopeAttachable();

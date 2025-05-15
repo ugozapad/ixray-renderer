@@ -963,6 +963,9 @@ void CWeaponMagazined::OnShot()
 	PHGetLinearVell				(vel);
 	OnShellDrop					(get_LastSP(), vel);
 	
+	// Проверка замены партикла в зависимости от патрона
+	IsAmmoParticleOverriden();
+
 	// Огонь из ствола
 	StartFlameParticles			();
 

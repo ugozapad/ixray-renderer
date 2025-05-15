@@ -1738,6 +1738,16 @@ bool CWeapon::IsSilencerAttached() const
 			ALife::eAddonPermanent == m_eSilencerStatus;
 }
 
+bool CWeapon::IsAmmoParticleOverriden() const
+{
+	if (!m_ammoTypes.size() || m_ammoType >= m_ammoTypes.size())
+		return false;
+
+	const_cast<CWeapon*>(this)->m_sFlameParticlesCurrent = m_DefaultCartridge.flameParticle;
+
+	return true;
+}
+
 bool CWeapon::GrenadeLauncherAttachable()
 {
 	return (ALife::eAddonAttachable == m_eGrenadeLauncherStatus);

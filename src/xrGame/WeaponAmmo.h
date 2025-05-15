@@ -7,6 +7,7 @@ struct SCartridgeParam
 {
 	float	kDist, kDisp, kHit/*, kCritical*/, kImpulse, kAP, kAirRes;
 	int		buckShot;
+	shared_str flameParticle;
 	float	impair;
 	float	fWallmarkSize;
 	u8		u8ColorID;
@@ -30,7 +31,7 @@ public:
 	CCartridge();
 	void Load(LPCSTR section, u8 LocalAmmoType);
 	float Weight() const;
-
+	shared_str flameParticle;
 	shared_str	m_ammoSect;
 	enum{
 		cfTracer				= (1<<0),
