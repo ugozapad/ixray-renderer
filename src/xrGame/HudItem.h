@@ -129,6 +129,8 @@ public:
 	virtual void				PlayAnimIdleSprint();
 
 	virtual void				UpdateCL			();
+	virtual void				UpdateHUD			();
+			void				UpdateAnimation		();
 	virtual void				renderable_Render	();
 
 
