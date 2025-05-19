@@ -1,111 +1,123 @@
 #include "stdafx.h"
-
 #pragma hdrstop
+#include <intrin.h> // Для SSE4.2 инструкций
 
-static u32 crc32_table[256]; // Lookup table array
+namespace {
 
-class Crc32Initializer final {
-public:
+    static u32 crc32_table[256]; // Lookup table для software реализации
+    static bool sse42_supported = false; // Флаг поддержки SSE4.2
 
-	static void init() noexcept {
-		static Crc32Initializer initializer;
-	}
+    class Crc32Initializer final {
+    public:
+        static void init() noexcept {
+            static Crc32Initializer initializer;
+        }
 
-private:
+    private:
+        Crc32Initializer() noexcept {
+            // Инициализация таблицы для software реализации
+            constexpr u32 POLYNOMIAL = 0xEDB88320;
+            for (u32 i = 0; i < 256; ++i) {
+                u32 crc = i;
+                for (int j = 0; j < 8; ++j) {
+                    crc = (crc >> 1) ^ ((crc & 1) ? POLYNOMIAL : 0);
+                }
+                crc32_table[i] = crc;
+            }
 
-	Crc32Initializer() noexcept {
-		crc32_init();
-	}
+            // Проверка поддержки SSE4.2
+            int cpu_info[4];
+            __cpuid(cpu_info, 1);
+            sse42_supported = (cpu_info[2] & (1 << 20)) != 0;
+        }
+    };
 
-	// Reflects CRC bits in the lookup table
-	static u32 reflect(u32 ref, char ch) noexcept {
-		// Used only by Init_CRC32_Table()
-		u32 value(0);
+    // Аппаратная реализация с SSE4.2
+    u32 crc32_sse42(const void* P, size_t len, u32 starting_crc = ~0u) noexcept {
+        const u8* buffer = static_cast<const u8*>(P);
+        u32 crc = starting_crc;
 
-		// Swap bit 0 for bit 7
-		// bit 1 for bit 6, etc.
-		for (int i = 1; i < (ch + 1); i++) {
-			if (ref & 1) {
-				value |= 1 << (ch - i);
-			}
-			ref >>= 1;
-		}
-		return value;
-	}
+        // Обрабатываем по 8 байт за раз
+        while (len >= 8) {
+            crc = (u32)_mm_crc32_u64(crc, *reinterpret_cast<const u64*>(buffer));
+            buffer += 8;
+            len -= 8;
+        }
 
-	static void crc32_init() noexcept {
-		// Call this function only once to initialize the CRC table
+        // Обрабатываем оставшиеся 4 байта
+        if (len >= 4) {
+            crc = _mm_crc32_u32(crc, *reinterpret_cast<const u32*>(buffer));
+            buffer += 4;
+            len -= 4;
+        }
 
-		// This is the official polynomial used by CRC-32
-		// in PKZip, WinZip and Ethernet
-		u32 ulPolynomial = 0x04c11db7;
+        // Обрабатываем оставшиеся 2 байта
+        if (len >= 2) {
+            crc = _mm_crc32_u16(crc, *reinterpret_cast<const u16*>(buffer));
+            buffer += 2;
+            len -= 2;
+        }
 
-		// 256 values representing ASCII character codes
-		for (int i = 0; i <= 0xFF; i++) {
-			crc32_table[i] = reflect(i, 8) << 24;
-			for (int j = 0; j < 8; j++) {
-				crc32_table[i] = (crc32_table[i] << 1) ^ (crc32_table[i] & (1 << 31) ? ulPolynomial : 0);
-			}
-			crc32_table[i] = reflect(crc32_table[i], 32);
-		}
-	}
-};
+        // Обрабатываем последний байт
+        if (len) {
+            crc = _mm_crc32_u8(crc, *buffer);
+        }
 
-u32 crc32(const void* P, size_t len) 
-{
-	Crc32Initializer::init();
+        return crc;
+    }
 
-	// Pass a text string to this function and it will return the CRC
+} // anonymous namespace
 
-	// Once the lookup table has been filled in by the two functions above,
-	// this function creates all CRCs using only the lookup table
+u32 crc32(const void* P, size_t len) {
+    Crc32Initializer::init();
 
-	// Be sure to use unsigned variables,
-	// because negative values introduce high bits
-	// where zero bits are required
+    if (sse42_supported) {
+        return crc32_sse42(P, len);
+    }
 
-	// Start out with all bits set high
-	u32 ulCRC = 0xffffffff;
-	u8* buffer = (u8*)P;
+    // Software fallback
+    u32 crc = ~0u;
+    const u8* buffer = static_cast<const u8*>(P);
 
-	// Perform the algorithm on each character
-	// in the string, using the lookup table values
-	while (len--) {
-		ulCRC = (ulCRC >> 8) ^ crc32_table[(ulCRC & 0xFF) ^ *buffer++];
-	}
+    while (len--) {
+        crc = (crc >> 8) ^ crc32_table[(crc & 0xFF) ^ *buffer++];
+    }
 
-	// Exclusive OR the result with the beginning value
-	return ulCRC ^ 0xFFFFFFFF;
+    return ~crc;
 }
 
-u32 crc32(const void* P, size_t len, u32 starting_crc) 
-{
-	Crc32Initializer::init();
+u32 crc32(const void* P, size_t len, u32 starting_crc) {
+    Crc32Initializer::init();
 
-	u32 ulCRC = 0xffffffff ^ starting_crc;
-	u8* buffer = (u8*)P;
+    if (sse42_supported) {
+        return crc32_sse42(P, len, ~starting_crc);
+    }
 
-	while (len--) {
-		ulCRC = (ulCRC >> 8) ^ crc32_table[(ulCRC & 0xFF) ^ *buffer++];
-	}
+    // Software fallback
+    u32 crc = ~starting_crc;
+    const u8* buffer = static_cast<const u8*>(P);
 
-	return ulCRC ^ 0xFFFFFFFF;
+    while (len--) {
+        crc = (crc >> 8) ^ crc32_table[(crc & 0xFF) ^ *buffer++];
+    }
+
+    return ~crc;
 }
 
-u32 path_crc32(const char* path, size_t len) 
-{
-	Crc32Initializer::init();
+u32 path_crc32(const char* path, size_t len) {
+    Crc32Initializer::init();
+    u32 crc = ~0u;
+    const u8* buffer = reinterpret_cast<const u8*>(path);
 
-	u32 ulCRC = 0xFFFFFFFF;
-	u8* buffer = (u8*)path;
+    // Для путей используем только software реализацию, 
+    // так как нужно пропускать символы '/' и '\'
+    while (len--) {
+        const u8 c = *buffer;
+        if (c != '/' && c != '\\') {
+            crc = (crc >> 8) ^ crc32_table[(crc & 0xFF) ^ *buffer];
+        }
+        ++buffer;
+    }
 
-	while (len--) {
-		const u8 c = *buffer;
-		if (c != '/' && c != '\\') {
-			ulCRC = (ulCRC >> 8) ^ crc32_table[(ulCRC & 0xFF) ^ *buffer++];
-		}
-		++buffer;
-	}
-
-	return ulCRC ^ 0xFFFFFFFF;
+    return ~crc;
 }
