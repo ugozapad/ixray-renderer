@@ -5,7 +5,6 @@
 namespace {
 
     static u32 crc32_table[256]; // Lookup table для software реализации
-    static bool sse42_supported = false; // Флаг поддержки SSE4.2
 
     class Crc32Initializer final {
     public:
@@ -24,11 +23,6 @@ namespace {
                 }
                 crc32_table[i] = crc;
             }
-
-            // Проверка поддержки SSE4.2
-            int cpu_info[4];
-            __cpuid(cpu_info, 1);
-            sse42_supported = (cpu_info[2] & (1 << 20)) != 0;
         }
     };
 
@@ -71,7 +65,7 @@ namespace {
 u32 crc32(const void* P, size_t len) {
     Crc32Initializer::init();
 
-    if (sse42_supported) {
+    if (CPU::ID.hasFeature(CPUFeature::SSE42)) {
         return crc32_sse42(P, len);
     }
 
@@ -89,7 +83,7 @@ u32 crc32(const void* P, size_t len) {
 u32 crc32(const void* P, size_t len, u32 starting_crc) {
     Crc32Initializer::init();
 
-    if (sse42_supported) {
+    if (CPU::ID.hasFeature(CPUFeature::SSE42)) {
         return crc32_sse42(P, len, ~starting_crc);
     }
 
