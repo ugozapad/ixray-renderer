@@ -15,6 +15,8 @@
 #include "../alife_registry_wrappers.h"
 #include "../../xrUI/UIHelper.h"
 
+#include "EffectorFall.h"
+
 #define				TALK_XML				"talk.xml"
 
 CUITalkDialogWnd::CUITalkDialogWnd()
@@ -137,7 +139,11 @@ void CUITalkDialogWnd::InitTalkDialogWnd()
 	}
 }
 
-	
+#include "Actor.h"
+#include "ActorEffector.h"
+
+CEffectorDOF* m_pDofEffector;
+
 void CUITalkDialogWnd::Show()
 {
 	InventoryUtilities::SendInfoToActor				("ui_talk_show");
@@ -145,8 +151,16 @@ void CUITalkDialogWnd::Show()
 	inherited::Show									(true);
 	inherited::Enable								(true);
 
+	Fvector4 m_ReloadDof;
+	m_ReloadDof.set(0.0f, 0.5f, 5.f, 0.0f);
+
+	m_pDofEffector = new CEffectorDOF(m_ReloadDof);
+	Actor()->Cameras().AddCamEffector(m_pDofEffector);
+
 	ResetAll										();
 }
+
+#include "GamePersistent.h"
 
 void CUITalkDialogWnd::Hide()
 {
@@ -154,6 +168,16 @@ void CUITalkDialogWnd::Hide()
 	InventoryUtilities::SendInfoToLuaScripts		("ui_talk_hide");
 	inherited::Show									(false);
 	inherited::Enable								(false);
+
+	if (m_pDofEffector)
+	{
+		GamePersistent().RestoreEffectorDOF();
+
+		Actor()->Cameras().RemoveCamEffector(eCEDOF);
+
+		m_pDofEffector = nullptr;
+	}
+
 	g_btnHint->Discard								();
 }
 

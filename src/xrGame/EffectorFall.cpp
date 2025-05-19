@@ -24,19 +24,30 @@ BOOL CEffectorFall::ProcessCam(SCamEffectorInfo& info)
 	return TRUE;
 }
 
-CEffectorDOF::CEffectorDOF(const Fvector4& dof)
-:CEffectorCam(eCEDOF, 100000)
+CEffectorDOF::CEffectorDOF(const Fvector4& dof, bool bManualControl)
+	: CEffectorCam(eCEDOF, bManualControl ? 100000.f : dof.w)
 {
-	GamePersistent().SetEffectorDOF	(Fvector().set(dof.x,dof.y,dof.z));
-	m_fPhase						= Device.fTimeGlobal + dof.w;
+	GamePersistent().SetEffectorDOF(Fvector().set(dof.x, dof.y, dof.z));
+	m_fPhase = bManualControl ? 0 : (Device.fTimeGlobal + dof.w);
+	m_bManualControl = bManualControl;
 }
 
 BOOL CEffectorDOF::ProcessCam(SCamEffectorInfo& info)
 {
-	if (m_fPhase<Device.fTimeGlobal)
+	if (!m_bManualControl && m_fPhase < Device.fTimeGlobal)
 	{
 		GamePersistent().RestoreEffectorDOF();
-		fLifeTime=-1;
+		fLifeTime = -1;
 	}
-	return				TRUE;
+
+	return TRUE;
+}
+
+void CEffectorDOF::Disable()
+{
+	if (m_bManualControl)
+	{
+		GamePersistent().RestoreEffectorDOF();
+		fLifeTime = -1;
+	}
 }

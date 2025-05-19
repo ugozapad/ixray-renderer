@@ -15,7 +15,10 @@ public:
 class CEffectorDOF : public CEffectorCam
 {
 	float			m_fPhase;
+	bool m_bManualControl;
 public:
-					CEffectorDOF	(const Fvector4& dof);
+					CEffectorDOF(const Fvector4& dof, bool bManualControl = false);
 	virtual BOOL	ProcessCam		(SCamEffectorInfo& info);
+
+	void Disable();
 };
