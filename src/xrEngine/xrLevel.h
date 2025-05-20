@@ -437,4 +437,6 @@ constexpr u32 MAX_AI_NODES = NodeCompressed::LINK_MASK_0;
 constexpr u32 XRAI_MINIMAL_VERSION = 10;
 constexpr u32 XRAI_CURRENT_VERSION = 11;
 constexpr u32 MAX_NODE_XZ = NodePosition::MAX_XZ;
+constexpr u32 XRAI_SOC_CURRENT_VERSION = 8;
+
 #pragma warning(pop)
