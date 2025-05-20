@@ -31,8 +31,7 @@ bool CUIScrollBar::InitScrollBar(Fvector2 pos, float length, bool bIsHorizontal,
 	float height					= xml_doc.ReadAttribFlt(profile, 0, (bIsHorizontal)? "height" : "height_v");
 	if (height == 0.0f)
 	{
-		if (EngineExternal().ClearSkyMode())
-			height = 16;
+		height = 16;
 	}
 	R_ASSERT(height > 0.0f);
 	m_hold_delay					= xml_doc.ReadAttribFlt(profile, 0, "hold_delay", 50.0f);
