@@ -129,11 +129,29 @@ function act_state_mgr_direction_turn:turn()
 	then		
 		look_at_object(self.object, self.st)
 	elseif self.st.look_position ~= nil then
+
+		--' Если принудительно задано тип смотрения
+		if state_lib.states[self.st.target_state].direction then
+			--printf("SET STATE SIGHT! %s", tostring(self.st.target_state))
+			self.object:set_sight(CSightParams.eSightTypeAnimationDirection, false,false)
+			return
+		end
+
+
 		local dir = vector():sub(self.st.look_position, self.object:position())
 		if self.st.point_obj_dir == true then
 			dir.y = 0
 		end
-	--	printf("SET_SIGHT!!!act_state_mgr_direction_turn:turn()")
+		dir:normalize()
+		if utils.vector_cmp(dir, vector():set(0,0,0)) then
+			callstack()
+			printf("Before normalize direction [%s]", vec_to_str(vector():sub(self.st.look_position, self.object:position())))
+			printf("You are trying to set wrong direction %s (look_pos = [%s] npc_pos = [%s])!!!", vec_to_str(dir), vec_to_str(self.st.look_position), vec_to_str(self.object:position()))
+			-- Затычка, если дирекшн плохой, то ставим текущий и меняем позицию куда смотреть(для эвалуатора)
+			self.st.look_position = vector():set(self.object:position().x + self.object:direction().x,self.object:position().y + self.object:direction().y,self.object:position().z + self.object:direction().z)
+			dir = self.object:direction()
+		end
+		--printf("SET_SIGHT!!!act_state_mgr_direction_turn:turn() %s", vec_to_str(dir))
 		self.object:set_sight(look.direction, dir, true)
 	end
 end
