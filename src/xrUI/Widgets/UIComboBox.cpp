@@ -6,6 +6,8 @@
 #include "UIXmlInit.h"
 #include "../../xrEngine/string_table.h"
 
+float CB_HEIGHT = EngineExternal().ClearSkyMode() ? 23.0f : 20.0f;
+
 CUIComboBox::CUIComboBox()
 {
 	AttachChild			(&m_frameLine);
