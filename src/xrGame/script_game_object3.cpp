@@ -48,6 +48,8 @@ namespace MemorySpace {
 	struct CHitObject;
 };
 
+bool vectorNormalize = EngineExternal().CallOfPripyatMode();
+
 void CScriptGameObject::IterateFeelTouch(const luabind::functor<bool>& functor)
 {
 	Feel::Touch* touch = smart_cast<Feel::Touch*>(&object());
@@ -939,7 +941,7 @@ void CScriptGameObject::set_sight		(SightManager::ESightType sight_type, Fvector
 #ifndef MASTER_GOLD
 			Msg("~ non-normalized direction passed [%f][%f][%f]", VPUSH(*vector3d));
 #endif
-			if (EngineExternal().CallOfPripyatMode())
+			if (vectorNormalize)
 				vector3d->normalize	( );
 		}
 
@@ -966,7 +968,7 @@ void CScriptGameObject::set_sight		(SightManager::ESightType sight_type, Fvector
 #ifndef MASTER_GOLD
 			Msg("~ non-normalized direction passed [%f][%f][%f]", VPUSH(vector3d));
 #endif
-			if (EngineExternal().CallOfPripyatMode())
+			if (vectorNormalize)
 				vector3d.normalize();
 		}
 
@@ -984,7 +986,7 @@ void CScriptGameObject::set_sight		(SightManager::ESightType sight_type, Fvector
 #ifndef MASTER_GOLD
 			Msg("~ non-normalized direction passed [%f][%f][%f]", VPUSH(*vector3d));
 #endif
-			if (EngineExternal().CallOfPripyatMode())
+			if (vectorNormalize)
 				vector3d->normalize();
 		}
 
