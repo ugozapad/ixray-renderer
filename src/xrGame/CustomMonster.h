@@ -112,7 +112,6 @@ public:
 	net_update				NET_Last;
 	BOOL					NET_WasInterpolating;	// previous update was by interpolation or by extrapolation
 	u32						NET_Time;				// server time of last update
-	bool					legacyHitSystem;
 //------------------------------
 
 	virtual BOOL		feel_touch_on_contact	(CObject *);

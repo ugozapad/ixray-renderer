@@ -60,7 +60,6 @@ protected:
 	xr_vector<xr_string> m_skins;
 	xr_vector<int>	m_skinsEnabled;
 	int				m_firstSkin;
-	int				m_SkinCount;
 	s16				m_team;
 };
 
