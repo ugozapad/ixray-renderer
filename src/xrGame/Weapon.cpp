@@ -2758,7 +2758,8 @@ bool CWeapon::IsCollimatorInstalled() const
 		return false;
 
 	shared_str scope = GetCurrentScopeSection();
-	scope = pSettings->r_string(scope, "scope_name");
+	if (!bUseAltScope)
+		scope = pSettings->r_string(scope, "scope_name");
 
 	return READ_IF_EXISTS(pSettings, r_bool, scope, "collimator", false);
 }
