@@ -2745,9 +2745,9 @@ bool CWeapon::IsUIForceHiding() const
 	if (bino && IsZoomed())
 		return READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "zoom_hide_ui", true);
 	else if (get_ScopeStatus() == 1 && IsZoomed())
-		return READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "zoom_hide_ui", false);
+		return READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "zoom_hide_ui", true);
 	else if (get_ScopeStatus() == 2 && IsScopeAttached() && IsZoomed())
-		return READ_IF_EXISTS(pSettings, r_bool, GetCurrentScopeSection(), "zoom_hide_ui", false);
+		return READ_IF_EXISTS(pSettings, r_bool, GetCurrentScopeSection(), "zoom_hide_ui", true);
 	else
 		return false;
 }
@@ -2778,9 +2778,9 @@ bool CWeapon::IsUIForceUnhiding() const
 		/*if (buf.IsAlterZoomMode())
 			result = true;
 		else */if (get_ScopeStatus() == 1)
-			result = !READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "zoom_hide_ui", false);
+			result = !READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "zoom_hide_ui", true);
 		else if (get_ScopeStatus() == 2 && IsScopeAttached())
-			result = !READ_IF_EXISTS(pSettings, r_bool, pSettings->r_string(GetCurrentScopeSection(), "scope_name"), "zoom_hide_ui", false);
+			result = !READ_IF_EXISTS(pSettings, r_bool, pSettings->r_string(GetCurrentScopeSection(), "scope_name"), "zoom_hide_ui", true);
 	}
 
 	return result;
