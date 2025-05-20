@@ -178,6 +178,7 @@ function keep_item(npc, item)
 		set_weapon_drop_condition(item)
 		return
 	end
+	alife():release(alife():object(item:id()), true)
 	--[[
     local item_id = item:id()
     local item_in_slot = npc:item_in_slot(1)
