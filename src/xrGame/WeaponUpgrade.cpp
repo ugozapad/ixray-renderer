@@ -170,7 +170,7 @@ bool CWeapon::install_upgrade_disp( LPCSTR section, bool test )
 	result |= process_if_exists( section, "PDM_disp_crouch",        &CInifile::r_float, m_pdm.m_fPDM_disp_crouch,        test );
 	result |= process_if_exists( section, "PDM_disp_crouch_no_acc", &CInifile::r_float, m_pdm.m_fPDM_disp_crouch_no_acc, test );
 
-	if (EngineExternal().ClearSkyMode()) {
+	if (useLegacyMisfire) {
 		result |= process_if_exists(section, "misfire_probability", &CInifile::r_float, misfireProbability, test);
 		result |= process_if_exists(section, "misfire_condition_k", &CInifile::r_float, misfireConditionK, test);
 		result |= process_if_exists(section, "condition_shot_dec", &CInifile::r_float, conditionDecreasePerShot, test);

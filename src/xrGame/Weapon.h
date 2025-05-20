@@ -460,6 +460,7 @@ public:
 	CameraRecoil			zoom_cam_recoil;	// using zoom =(ironsight or scope)
 
 protected:
+	bool					useLegacyMisfire;
 	//фактор увеличения дисперсии при максимальной изношености 
 	//(на сколько процентов увеличится дисперсия)
 	float					fireDispersionConditionFactor;

@@ -447,8 +447,9 @@ void CWeapon::Load		(LPCSTR section)
 
 	m_first_bullet_controller.load	(section);
 	fireDispersionConditionFactor = pSettings->r_float(section,"fire_dispersion_condition_factor");
+	useLegacyMisfire = EngineExternal()[EEngineExternalGame::EnableLegacyWeaponMisfire];
 
-	if (EngineExternal().ClearSkyMode()) {
+	if (useLegacyMisfire) {
 		misfireProbability = pSettings->r_float(section, "misfire_probability");
 		misfireConditionK = READ_IF_EXISTS(pSettings, r_float, section, "misfire_condition_k", 1.0f);
 		conditionDecreasePerShot = pSettings->r_float(section, "condition_shot_dec");
@@ -1671,7 +1672,7 @@ int CWeapon::GetAmmoCount_forType( shared_str const& ammo_type ) const
 float CWeapon::GetConditionMisfireProbability() const
 {
 	// modified by Peacemaker [17.10.08]
-	if (EngineExternal().ClearSkyMode())
+	if (useLegacyMisfire)
 	{
 		if (GetCondition() > 0.95f)
 			return 0.0f;
@@ -1683,7 +1684,7 @@ float CWeapon::GetConditionMisfireProbability() const
 			return misfireEndProbability;
 	}
 	float mis;
-	if (EngineExternal().ClearSkyMode())
+	if (useLegacyMisfire)
 		mis = misfireProbability + powf(1.f - GetCondition(), 3.f) * misfireConditionK;
 	else {
 		mis = misfireStartProbability + (
