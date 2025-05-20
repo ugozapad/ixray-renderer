@@ -495,11 +495,11 @@ void CUIInventoryUpgradeWnd::DeInitInventory()
 	m_btn_repair->Enable(false);
 	m_scheme_wnd->DetachAll();
 	m_scheme_wnd->Show(false);
-	if (m_item_info)
+/*	if (m_item_info)
 	{
 		m_item_info->DetachAll();
 		m_item_info->Show(false);
-	}
+	}*/
 	if (m_btn_disassemble != nullptr)
 	{
 		m_btn_disassemble->Enable(false);
