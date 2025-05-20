@@ -5,6 +5,10 @@ void main(p_bumped_new I, out IXrayGbufferPack O)
 {
     IXrayMaterial M;
     M.Depth = I.position.z;
+	
+#ifdef USE_CLIP_NEAR_PLANE
+	clip(I.hpos_curr.z - I.hpos_curr.w * 0.02f);
+#endif
 
     M.Sun = I.tcdh.w;
     M.Hemi = I.tcdh.z;
@@ -45,7 +49,7 @@ void main(p_bumped_new I, out IXrayGbufferPack O)
 		M.Color.xyz *= M.AO;
 		M.AO = 1.0f;
 		float Specular = M.Metalness * dot(M.Color.xyz, LUMINANCE_VECTOR);
-		M.Color.xyz = lerp(M.Color.xyz, F0, M.Metalness);
+		M.Color.xyz = lerp(M.Color.xyz, 0.04f, M.Metalness);
 		M.Metalness = 0.5f - M.Roughness * M.Roughness * 0.5f;
 		M.Roughness = Specular;
     #endif
