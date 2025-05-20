@@ -1887,7 +1887,7 @@ shared_str CWeaponMagazined::SetCurrentShootAnimation()
 			AddSuffixName(anim, "_l");
 		}
 	}
-	if (anim == "anm_shots" && last) // костыли, костыли, костыли... обожаю костыли
+	if (anim == "anm_shots" && last && HudAnimationExist("anm_shot_l")) // костыли, костыли, костыли... обожаю костыли
 		anim = "anm_shot_l";
 	
 	return anim;
