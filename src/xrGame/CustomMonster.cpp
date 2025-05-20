@@ -99,6 +99,7 @@ CCustomMonster::CCustomMonster() :
 	m_already_dead				= false;
 	m_invulnerable				= false;
 	m_moving_object				= 0;
+	legacyHitSystem				= EngineExternal().ClearSkyMode();
 }
 
 CCustomMonster::~CCustomMonster	()

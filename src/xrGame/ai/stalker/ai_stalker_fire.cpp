@@ -236,7 +236,7 @@ void CAI_Stalker::Hit(SHit* pHDS)
 		float BoneArmor = m_boneHitProtection->getBoneArmor(HDS.bone());
 		float ap = HDS.armor_piercing;
 
-		if (EngineExternal().ClearSkyMode())
+		if (legacyHitSystem)
 		{
 			if (ap > EPS && ap > BoneArmor)
 			{
